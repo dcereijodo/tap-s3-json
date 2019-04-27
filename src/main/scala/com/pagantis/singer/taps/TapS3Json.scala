@@ -2,10 +2,12 @@ package com.pagantis.singer.taps
 
 import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
+import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.{Await, ExecutionContextExecutor}
+import scala.concurrent.duration._
 
 object TapS3Json extends App {
 
@@ -24,11 +26,8 @@ object TapS3Json extends App {
   implicit val standardLogger: LoggingAdapter = Logging(system, clazz)
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-  // list the bucket contents for the given preffix (if present)
-  val s3Contents = S3Source.fromBucket(bucketName, s3Preffix)
-
   // stream the bucket contents for the provided json paths as singer messages to stdout
-  s3Contents
+  S3Source.object_contents.inBucket(bucketName, s3Preffix)
     .log(clazz)
     .map(JsonPaths.asMap(_, jsonPaths))
     .log(clazz)
@@ -37,6 +36,16 @@ object TapS3Json extends App {
     .map(SingerAdapter.toJsonString)
     // TODO: instead of writing to stdout a cleaner approach would be using another logger for singer messages
     .runForeach(println(_))
-    .onComplete(_ => system.terminate)
+    // Now comes a fairly complicated shutdown sequence, which first shuts down the underlying http infrastructure
+    // and then terminates the materializer and actor system. This is to avoid akka to complaint about abrupt termination
+    // as it is described in this issue https://github.com/akka/akka-http/issues/497
+    // This shutdown sequence was copied from another related issue: https://github.com/akka/akka-http/issues/907#issuecomment-345288919
+    .onComplete(_ => {
+        Http().shutdownAllConnectionPools.andThen { case _ =>
+          materializer.shutdown
+          system.terminate
+        }
+      }
+    )
 
 }
