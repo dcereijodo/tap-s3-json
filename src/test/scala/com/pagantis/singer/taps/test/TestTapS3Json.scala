@@ -5,17 +5,15 @@ import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import akka.stream.alpakka.s3.{S3Attributes, S3Settings}
-import akka.stream.scaladsl.Sink
 import akka.stream.testkit.scaladsl.TestSink
 import akka.testkit.{ImplicitSender, TestKit}
 import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.regions.AwsRegionProvider
 import com.pagantis.singer.taps.S3Source
-import org.scalatest.{BeforeAndAfterAll, FlatSpec, Ignore, Matchers, WordSpecLike}
+import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
-import scala.concurrent.{Await, ExecutionContextExecutor}
+import scala.concurrent.ExecutionContextExecutor
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
 
 // source docs for creating and understanding this test
 // https://doc.akka.io/docs/akka/current/testing.html#testing-actor-systems

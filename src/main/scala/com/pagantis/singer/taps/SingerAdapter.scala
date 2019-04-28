@@ -1,6 +1,6 @@
 package com.pagantis.singer.taps
 
-import java.time.{LocalDateTime, ZonedDateTime}
+import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 import spray.json.{DefaultJsonProtocol, JsString, JsValue, RootJsonFormat}
@@ -33,8 +33,8 @@ object SingerAdapter {
     TapS3JsonRecord(time_extracted = None, record = matches)
 
   def toJsonString(tapS3JsonRecord: TapS3JsonRecord): String = {
-    import spray.json._
     import JsonProtocol._
+    import spray.json._
 
     tapS3JsonRecord.toJson.compactPrint
   }

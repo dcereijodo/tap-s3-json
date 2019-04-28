@@ -6,8 +6,7 @@ import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
 
-import scala.concurrent.{Await, ExecutionContextExecutor}
-import scala.concurrent.duration._
+import scala.concurrent.ExecutionContextExecutor
 
 object TapS3Json extends App {
 

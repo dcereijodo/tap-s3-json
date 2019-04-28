@@ -1,10 +1,8 @@
 package com.pagantis.singer.taps
 
 import akka.NotUsed
-import akka.stream.ActorMaterializer
 import akka.stream.alpakka.s3.scaladsl.S3
 import akka.stream.scaladsl.Source
-import akka.util.ByteString
 
 object S3Source {
 

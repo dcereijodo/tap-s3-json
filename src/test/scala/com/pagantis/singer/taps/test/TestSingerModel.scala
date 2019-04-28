@@ -17,8 +17,8 @@ class TestSingerModel extends FlatSpec with Matchers {
         )
     )
 
-    import spray.json._
     import com.pagantis.singer.taps.JsonProtocol._
+    import spray.json._
     val tapRecordAsJson = tapRecord.toJson.compactPrint
 
     tapRecordAsJson shouldBe """{"type":"RECORD","stream":"jsonpath-matches","time_extracted":"2019-04-23T12:00:00Z","record":{"path1":"match1","path2":"match2"}}"""
@@ -31,8 +31,8 @@ class TestSingerModel extends FlatSpec with Matchers {
       record = Map()
     )
 
-    import spray.json._
     import com.pagantis.singer.taps.JsonProtocol._
+    import spray.json._
     val tapRecordAsJson = tapRecord.toJson.compactPrint
 
     //noinspection ScalaUnnecessaryParentheses
@@ -51,8 +51,8 @@ class TestSingerModel extends FlatSpec with Matchers {
         )
     )
 
-    import spray.json._
     import com.pagantis.singer.taps.JsonProtocol._
+    import spray.json._
     val tapRecordAsJson = tapRecord.toJson.compactPrint
 
     tapRecordAsJson shouldBe """{"type":"RECORD","stream":"jsonpath-matches","time_extracted":"2019-04-23T12:00:00Z","record":{"path1":null,"path2":"match2"}}"""
