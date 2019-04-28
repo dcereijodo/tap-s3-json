@@ -5,7 +5,7 @@ import io.gatling.jsonpath.JsonPath
 
 object JsonPaths {
 
-  def query(jsonObject : Object, jsonPath: String) = {
+  private def query(jsonObject : Object, jsonPath: String) = {
 
     JsonPath.query(jsonPath, jsonObject) match {
       // if the query was successful
@@ -19,7 +19,7 @@ object JsonPaths {
 
   }
 
-  def asList(jsonValue: String, jsonPaths: List[String]) = {
+  def asList(jsonValue: String, jsonPaths: List[String]): List[Option[String]] = {
 
     val jsonObject = (new ObjectMapper).readValue(jsonValue, classOf[Object])
     jsonPaths.map(
@@ -28,7 +28,7 @@ object JsonPaths {
 
   }
 
-  def asMap(jsonValue: String, jsonPaths: List[String]) = {
+  def asMap(jsonValue: String, jsonPaths: List[String]): Map[String, Option[String]] = {
 
     val jsonObject = (new ObjectMapper).readValue(jsonValue, classOf[Object])
     jsonPaths.map(

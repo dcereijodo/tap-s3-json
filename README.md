@@ -53,3 +53,6 @@ And next run the tap like
 ```bash
 java -jar target/scala-2.12/tap-s3-json-assembly-0.1-SNAPSHOT.jar -Dconfig.file=application.conf
 ```
+
+# Testing
+Integration tests are based on [minio](https://github.com/minio/minio) public object store service.

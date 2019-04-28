@@ -21,6 +21,7 @@ object JsonProtocol extends DefaultJsonProtocol {
     override def write(datetime: ZonedDateTime): JsValue = {
       JsString(datetime.format(DateTimeFormatter.ISO_INSTANT))
     }
+    //noinspection NotImplementedCode
     override def read(json: JsValue): ZonedDateTime = ??? //TODO: we won't read dates in the stream for now
   }
   implicit val recordSerde: RootJsonFormat[TapS3JsonRecord] = jsonFormat4(TapS3JsonRecord)
