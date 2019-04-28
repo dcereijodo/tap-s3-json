@@ -6,7 +6,9 @@ import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import com.typesafe.config.ConfigFactory
 
-import scala.concurrent.ExecutionContextExecutor
+import scala.concurrent.duration.Duration
+import scala.concurrent.{Await, ExecutionContextExecutor, Future}
+import scala.util.Success
 
 object TapS3Json extends App {
 
@@ -39,12 +41,19 @@ object TapS3Json extends App {
     // and then terminates the materializer and actor system. This is to avoid akka to complaint about abrupt termination
     // as it is described in this issue https://github.com/akka/akka-http/issues/497
     // This shutdown sequence was copied from another related issue: https://github.com/akka/akka-http/issues/907#issuecomment-345288919
-    .onComplete(_ => {
+    .onComplete(res => {
         Http().shutdownAllConnectionPools.andThen { case _ =>
           materializer.shutdown
           system.terminate
         }
+        res match {
+          case Success(value) => sys.exit(0)
+          case _ => sys.exit(1)
+        }
       }
     )
 
+  // block main thread
+  // exit will be handled on the stream exit callback
+  Await.ready(Future.never, Duration.Inf)
 }
