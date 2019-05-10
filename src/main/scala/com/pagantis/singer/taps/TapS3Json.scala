@@ -47,7 +47,7 @@ object TapS3Json extends App {
           system.terminate
         }
         res match {
-          case Success(value) => sys.exit(0)
+          case Success(_) => sys.exit(0)
           case _ => sys.exit(1)
         }
       }
