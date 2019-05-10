@@ -1,9 +1,17 @@
 package com.pagantis.singer.taps
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.typesafe.config.ConfigFactory
 import io.gatling.jsonpath.JsonPath
+import net.ceedubs.ficus.Ficus._
 
-object JsonPaths {
+class JsonPaths(jsonPaths: List[String]) {
+
+  def this(jsonPath: String) =
+    this(List(jsonPath))
+
+  def this() =
+    this(ConfigFactory.load().getConfig("tap").as[List[String]]("json_paths"))
 
   private def query(jsonObject : Object, jsonPath: String) = {
 
@@ -19,7 +27,7 @@ object JsonPaths {
 
   }
 
-  def asList(jsonValue: String, jsonPaths: List[String]): List[Option[String]] = {
+  def asList(jsonValue: String): List[Option[String]] = {
 
     val jsonObject = (new ObjectMapper).readValue(jsonValue, classOf[Object])
     jsonPaths.map(
@@ -28,7 +36,7 @@ object JsonPaths {
 
   }
 
-  def asMap(jsonValue: String, jsonPaths: List[String]): Map[String, Option[String]] = {
+  def asMap(jsonValue: String): Map[String, Option[String]] = {
 
     val jsonObject = (new ObjectMapper).readValue(jsonValue, classOf[Object])
     jsonPaths.map(

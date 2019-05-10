@@ -14,23 +14,18 @@ object TapS3Json extends App {
 
   val clazz = getClass.getName
 
-  // parse config
-  val config = ConfigFactory.load().getConfig("tap")
-  import net.ceedubs.ficus.Ficus._
-  val bucketName = config.getString("bucket_name")
-  val s3Preffix = config.as[Option[String]]("s3_preffix")
-  val jsonPaths = config.as[List[String]]("json_paths")
-
   // init actor system, loggers and execution context
   implicit val system: ActorSystem = ActorSystem("TapS3Json")
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val standardLogger: LoggingAdapter = Logging(system, clazz)
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
+  val jsonPaths = new JsonPaths()
+
   // stream the bucket contents for the provided json paths as singer messages to stdout
-  S3Source.object_contents.inBucket(bucketName, s3Preffix)
+  S3Source.fromConfig.object_contents
     .log(clazz)
-    .map(JsonPaths.asMap(_, jsonPaths))
+    .map(jsonPaths.asMap(_))
     .log(clazz)
     .map(SingerAdapter.toSingerRecord)
     .log(clazz)

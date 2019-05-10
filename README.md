@@ -56,3 +56,19 @@ java -jar target/scala-2.12/tap-s3-json-assembly-0.1-SNAPSHOT.jar -Dconfig.file=
 
 # Testing
 Integration tests are based on [minio](https://github.com/minio/minio) public object store service.
+
+# Date-based tapping
+One can tap using an environment variable `EXECUTION_DATE` provided the partitioning configuration is defined
+in the `application.conf`
+```hocon
+tap {
+
+  # some other configs
+  s3_perefix = "my-table"
+  
+  partitioning {
+    key = "date"
+  }
+}
+```
+will output all the records in the `my-table\date=$EXECUTION_DATE` S3 prefix.
