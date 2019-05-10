@@ -28,7 +28,7 @@ object S3Source {
             }
             .flatMapConcat(p => p)
         )
-        .map(_.utf8String)
+        .mapConcat(_.utf8String.split("\n").toList)
     }
 
     def inBucket(bucketName: String):Source[String, NotUsed] =
