@@ -5,11 +5,13 @@ import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.Http
 import akka.stream.ActorMaterializer
 import akka.stream.alpakka.s3.{S3Attributes, S3Settings}
+import akka.stream.scaladsl.Sink
 import akka.stream.testkit.scaladsl.TestSink
 import akka.testkit.{ImplicitSender, TestKit}
 import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.regions.AwsRegionProvider
 import com.pagantis.singer.taps.S3Source
+import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
 import scala.concurrent.ExecutionContextExecutor
@@ -33,6 +35,7 @@ class TestTapS3Json
   with ImplicitSender
   with WordSpecLike
   with Matchers
+  with ScalaFutures
   with BeforeAndAfterAll
   {
 
@@ -60,6 +63,8 @@ class TestTapS3Json
     val rightRegionProvider: AwsRegionProvider = new AwsRegionProvider {
       override def getRegion: String = rightRegion
     }
+
+    implicit val defaultPatience: PatienceConfig = PatienceConfig(90.seconds, 30.millis)
 
     "S3Source" must {
       "fail to start when invalid credentials are provided" in {
@@ -122,6 +127,60 @@ class TestTapS3Json
             )
             .runWith(TestSink.probe[String]).request(1).expectComplete()
         }
+      }
+
+      "success to stream a single-line file from an S3 bucket" in {
+        // this is bucket with test data at minio public server https://play.min.io:9000/minio/00test/
+        val completable =
+          S3Source.object_contents.inBucket("tap-s3-json", "8f3ac260-2d50-4a84-8e9b-eae8a6b79b7d")
+            .withAttributes(
+              S3Attributes.settings(
+                S3Settings()
+                  .withCredentialsProvider(rightCredentialsProvider)
+                  .withS3RegionProvider(rightRegionProvider)
+                  .withEndpointUrl(rightEndpoint)
+              )
+            )
+            .runWith(Sink.seq)
+
+        val listingResult = completable.futureValue
+        listingResult.size shouldBe 1
+      }
+
+      "success to stream a multiline file from an S3 bucket" in {
+        // this is bucket with test data at minio public server https://play.min.io:9000/minio/00test/
+        val completable =
+          S3Source.object_contents.inBucket("tap-s3-json", "api_shops.json")
+            .withAttributes(
+              S3Attributes.settings(
+                S3Settings()
+                  .withCredentialsProvider(rightCredentialsProvider)
+                  .withS3RegionProvider(rightRegionProvider)
+                  .withEndpointUrl(rightEndpoint)
+              )
+            )
+            .runWith(Sink.seq)
+
+        val listingResult = completable.futureValue
+        listingResult.size shouldBe 3
+      }
+
+      "success to stream a mixed single-line / multiline bucket S3 bucket" in {
+        // this is bucket with test data at minio public server https://play.min.io:9000/minio/00test/
+        val completable =
+          S3Source.object_contents.inBucket("tap-s3-json")
+            .withAttributes(
+              S3Attributes.settings(
+                S3Settings()
+                  .withCredentialsProvider(rightCredentialsProvider)
+                  .withS3RegionProvider(rightRegionProvider)
+                  .withEndpointUrl(rightEndpoint)
+              )
+            )
+            .runWith(Sink.seq)
+
+        val listingResult = completable.futureValue
+        listingResult.size shouldBe 4
       }
     }
 
