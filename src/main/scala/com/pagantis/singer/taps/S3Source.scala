@@ -3,38 +3,51 @@ package com.pagantis.singer.taps
 import akka.NotUsed
 import akka.stream.alpakka.s3.scaladsl.S3
 import akka.stream.scaladsl.Source
+import com.typesafe.config.ConfigFactory
 
-object S3Source {
+object S3Source extends PartitioningUtils {
 
-  private object object_keys {
-    def inBucket(bucketName: String, s3Preffix: Option[String]): Source[String, NotUsed] =
-      S3.listBucket(bucketName, s3Preffix).map(_.key)
+  def fromConfig = {
+    val config = ConfigFactory.load().getConfig("tap")
+    import net.ceedubs.ficus.Ficus._
+    new S3Source(
+      config.getString("bucket_name"),
+      config.as[Option[String]]("s3_preffix"),
+      buildPartitioningSubPath(
+        config.as[Option[String]]("partitioning.key"),
+        config.as[Option[String]]("partitioning.value"))
+    )
   }
 
-  object object_contents {
+}
 
-    def inBucket(bucketName: String, s3Preffix: Option[String]): Source[String, NotUsed] = {
+class S3Source(
+                bucketName: String,
+                s3Preffix: Option[String] =  None,
+                partitioningSubPath: Option[String] = None
+              )
+extends PartitioningUtils
+{
 
-      val objectsToProcess = object_keys.inBucket(bucketName, s3Preffix)
+  def object_keys: Source[String, NotUsed] =
+    S3.listBucket(bucketName, buildS3Preffix(s3Preffix, partitioningSubPath)).map(_.key)
 
-      objectsToProcess
-        .flatMapConcat(objectHandler =>
-          S3
-            .download(bucketName, objectHandler)
-            .collect { // take successful downloads
-              case Some(successfulDownloadAsASource) =>
-                // first element in the tuple contains the actual source, second element is metadata
-                successfulDownloadAsASource._1
-            }
-            .flatMapConcat(p => p)
-        )
-        .mapConcat(_.utf8String.split("\n").toList)
-    }
+  def object_contents: Source[String, NotUsed] = {
 
-    def inBucket(bucketName: String):Source[String, NotUsed] =
-      inBucket(bucketName, None)
-    def inBucket(bucketName: String, s3Preffix: String): Source[String, NotUsed] =
-      inBucket(bucketName, Some(s3Preffix))
+    val objectsToProcess = object_keys
+
+    objectsToProcess
+      .flatMapConcat(objectHandler =>
+        S3
+          .download(bucketName, objectHandler)
+          .collect { // take successful downloads
+            case Some(successfulDownloadAsASource) =>
+              // first element in the tuple contains the actual source, second element is metadata
+              successfulDownloadAsASource._1
+          }
+          .flatMapConcat(p => p)
+      )
+      .mapConcat(_.utf8String.split("\n").toList)
   }
 
 }

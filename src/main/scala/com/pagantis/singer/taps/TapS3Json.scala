@@ -14,27 +14,20 @@ object TapS3Json extends App {
 
   val clazz = getClass.getName
 
-  // parse config
-  val config = ConfigFactory.load().getConfig("tap")
-  import net.ceedubs.ficus.Ficus._
-  val bucketName = config.getString("bucket_name")
-  val s3Preffix = config.as[Option[String]]("s3_preffix")
-  val jsonPaths = config.as[List[String]]("json_paths")
-
   // init actor system, loggers and execution context
   implicit val system: ActorSystem = ActorSystem("TapS3Json")
   implicit val materializer: ActorMaterializer = ActorMaterializer()
   implicit val standardLogger: LoggingAdapter = Logging(system, clazz)
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
+  val singerAdapter = SingerAdapter.fromConfig
+
   // stream the bucket contents for the provided json paths as singer messages to stdout
-  S3Source.object_contents.inBucket(bucketName, s3Preffix)
+  S3Source.fromConfig.object_contents
     .log(clazz)
-    .map(JsonPaths.asMap(_, jsonPaths))
+    .map(singerAdapter.toSingerRecord(_))
     .log(clazz)
-    .map(SingerAdapter.toSingerRecord)
-    .log(clazz)
-    .map(SingerAdapter.toJsonString)
+    .map(singerAdapter.toJsonString(_))
     // TODO: instead of writing to stdout a cleaner approach would be using another logger for singer messages
     .runForeach(println(_))
     // Now comes a fairly complicated shutdown sequence, which first shuts down the underlying http infrastructure
@@ -53,7 +46,7 @@ object TapS3Json extends App {
       }
     )
 
-  // block main thread
+  // block main thread forever
   // exit will be handled on the stream exit callback
   Await.ready(Future.never, Duration.Inf)
 }

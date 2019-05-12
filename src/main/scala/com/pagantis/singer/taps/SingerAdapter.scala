@@ -13,8 +13,9 @@ case class TapS3JsonRecord(
                             `type`: String = "RECORD",
                             stream: String =  "jsonpath-matches",
                             time_extracted: Option[ZonedDateTime],
-                            record: Map[String,Option[String]]
+                            record: JsValue
                           )
+
 // json protocol
 object JsonProtocol extends DefaultJsonProtocol {
   implicit object DateJsonFormat extends RootJsonFormat[ZonedDateTime] {
@@ -29,15 +30,24 @@ object JsonProtocol extends DefaultJsonProtocol {
 
 object SingerAdapter {
 
-  def toSingerRecord(matches: Map[String,Option[String]]) =
-    TapS3JsonRecord(time_extracted = None, record = matches)
+  def fromConfig =
+    new SingerAdapter(JsonPaths.fromConfig)
 
-  def toJsonString(tapS3JsonRecord: TapS3JsonRecord): String = {
-    import JsonProtocol._
-    import spray.json._
+}
 
-    tapS3JsonRecord.toJson.compactPrint
+class SingerAdapter(jsonPaths: Option[JsonPaths]) {
+  import spray.json._
+  import JsonProtocol._
+
+  def toSingerRecord(line: String) = {
+    jsonPaths match {
+      case Some(paths) => TapS3JsonRecord(time_extracted = None, record = paths.asMap(line).toJson)
+      case None => TapS3JsonRecord(stream = "raw", time_extracted = None, record = line.parseJson)
+    }
   }
+
+  def toJsonString(tapS3JsonRecord: TapS3JsonRecord): String =
+    tapS3JsonRecord.toJson.compactPrint
 
 }
 
