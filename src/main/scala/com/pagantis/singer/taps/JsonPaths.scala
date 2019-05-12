@@ -5,13 +5,16 @@ import com.typesafe.config.ConfigFactory
 import io.gatling.jsonpath.JsonPath
 import net.ceedubs.ficus.Ficus._
 
+object JsonPaths {
+
+  def fromConfig =
+    ConfigFactory.load().getConfig("tap")
+      .as[Option[List[String]]]("json.paths")
+      .map(new JsonPaths(_))
+
+}
+
 class JsonPaths(jsonPaths: List[String]) {
-
-  def this(jsonPath: String) =
-    this(List(jsonPath))
-
-  def this() =
-    this(ConfigFactory.load().getConfig("tap").as[List[String]]("json_paths"))
 
   private def query(jsonObject : Object, jsonPath: String) = {
 

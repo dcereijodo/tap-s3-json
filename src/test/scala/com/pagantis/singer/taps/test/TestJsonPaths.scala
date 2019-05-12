@@ -7,7 +7,7 @@ class TestJsonPaths extends FlatSpec with Matchers {
 
   "JsonPaths" should "extract a single string value" in {
     val jsonPaths = new JsonPaths(
-      "$.keyA.keyA1"
+      List("$.keyA.keyA1")
     )
     jsonPaths.asList(
       """
@@ -46,7 +46,7 @@ class TestJsonPaths extends FlatSpec with Matchers {
 
   "JsonPaths" should "extract one single integer value" in {
     val jsonPaths = new JsonPaths(
-      "$.keyA.keyA3"
+      List("$.keyA.keyA3")
     )
     jsonPaths.asList(
       """
@@ -63,7 +63,7 @@ class TestJsonPaths extends FlatSpec with Matchers {
 
   "JsonPaths" should "extract first element from an array" in {
     val jsonPaths = new JsonPaths(
-      "$.keyA.keyA4[0]"
+      List("$.keyA.keyA4[0]")
     )
     jsonPaths.asList(
       """
@@ -82,7 +82,7 @@ class TestJsonPaths extends FlatSpec with Matchers {
 
   "JsonPaths" should "extract non existent array element as None" in {
     val jsonPaths = new JsonPaths(
-      "$.keyA.keyA4[2]"
+      List("$.keyA.keyA4[2]")
     )
     jsonPaths.asList(
       """
@@ -101,7 +101,7 @@ class TestJsonPaths extends FlatSpec with Matchers {
 
   "JsonPaths" should "extract non existent key as None" in {
     val jsonPaths = new JsonPaths(
-      "$.keyB.keyA3[2]"
+      List("$.keyB.keyA3[2]")
     )
     jsonPaths.asList(
       """
@@ -120,7 +120,7 @@ class TestJsonPaths extends FlatSpec with Matchers {
 
   "JsonPaths" should "extract null value as None" in {
     val jsonPaths = new JsonPaths(
-      "$.keyA.keyA4[0]"
+      List("$.keyA.keyA4[0]")
     )
     jsonPaths.asList(
       """

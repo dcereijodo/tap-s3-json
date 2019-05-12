@@ -20,16 +20,14 @@ object TapS3Json extends App {
   implicit val standardLogger: LoggingAdapter = Logging(system, clazz)
   implicit val ec: ExecutionContextExecutor = system.dispatcher
 
-  val jsonPaths = new JsonPaths()
+  val singerAdapter = SingerAdapter.fromConfig
 
   // stream the bucket contents for the provided json paths as singer messages to stdout
   S3Source.fromConfig.object_contents
     .log(clazz)
-    .map(jsonPaths.asMap(_))
+    .map(singerAdapter.toSingerRecord(_))
     .log(clazz)
-    .map(SingerAdapter.toSingerRecord)
-    .log(clazz)
-    .map(SingerAdapter.toJsonString)
+    .map(singerAdapter.toJsonString(_))
     // TODO: instead of writing to stdout a cleaner approach would be using another logger for singer messages
     .runForeach(println(_))
     // Now comes a fairly complicated shutdown sequence, which first shuts down the underlying http infrastructure
@@ -48,7 +46,7 @@ object TapS3Json extends App {
       }
     )
 
-  // block main thread
+  // block main thread forever
   // exit will be handled on the stream exit callback
   Await.ready(Future.never, Duration.Inf)
 }

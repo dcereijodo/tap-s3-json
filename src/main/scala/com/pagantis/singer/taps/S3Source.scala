@@ -14,7 +14,7 @@ object S3Source extends PartitioningUtils {
       config.getString("bucket_name"),
       config.as[Option[String]]("s3_preffix"),
       buildPartitioningSubPath(
-        config.as[Option[String]]("s3_preffix"),
+        config.as[Option[String]]("partitioning.key"),
         config.as[Option[String]]("partitioning.value"))
     )
   }
