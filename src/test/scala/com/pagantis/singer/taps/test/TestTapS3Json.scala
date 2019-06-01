@@ -101,7 +101,7 @@ class TestTapS3Json
 
       "success to start when valid credentials are provided" in {
         within(50 seconds) {
-          new S3Source("bateboiko").object_contents // this is random bucket at minio public server https://play.min.io:9000/minio/00test/
+          new S3Source("183p1xn63oohgdtu3jcposeygupg5mdc").object_contents // this is random bucket at minio public server https://play.min.io:9000/minio/
             .withAttributes(
               S3Attributes.settings(
                 S3Settings()
@@ -114,9 +114,9 @@ class TestTapS3Json
         }
       }
 
-      "success to stream from a bucket even provided preffix does not exist" in {
+      "success to stream from a bucket even if provided preffix does not exist" in {
         within(50 seconds) {
-          new S3Source("bateboiko", Some("madeup-path")).object_contents // this is random bucket at minio public server https://play.min.io:9000/minio/00test/
+          new S3Source("183p1xn63oohgdtu3jcposeygupg5mdc", Some("madeup-path")).object_contents // this is random bucket at minio public server https://play.min.io:9000/minio/
             .withAttributes(
               S3Attributes.settings(
                 S3Settings()
@@ -130,11 +130,9 @@ class TestTapS3Json
       }
 
       "success to stream a single-line file from an S3 bucket" in {
-        // this is bucket with test data at minio public server https://play.min.io:9000/minio/tap-s3-json/
-        val t = new S3Source("tap-s3-json", Some("8f3ac260-2d50-4a84-8e9b-eae8a6b79b7d"))
-        t.object_keys
         val completable =
-          new S3Source("tap-s3-json", Some("8f3ac260-2d50-4a84-8e9b-eae8a6b79b7d")).object_contents
+          // this is bucket with test data at minio public server https://play.min.io:9000/minio/tap-s3-json/
+          new S3Source("tap-s3-json", Some("single-line-file")).object_contents
             .withAttributes(
               S3Attributes.settings(
                 S3Settings()
@@ -150,9 +148,9 @@ class TestTapS3Json
       }
 
       "success to stream a multiline file from an S3 bucket" in {
-        // this is bucket with test data at minio public server https://play.min.io:9000/minio/tap-s3-json/
         val completable =
-          new S3Source("tap-s3-json", Some("api_shops.json")).object_contents
+          // this is bucket with test data at minio public server https://play.min.io:9000/minio/tap-s3-json/
+          new S3Source("tap-s3-json", Some("multi-line-file")).object_contents
             .withAttributes(
               S3Attributes.settings(
                 S3Settings()
@@ -168,8 +166,8 @@ class TestTapS3Json
       }
 
       "success to stream a mixed single-line / multiline bucket S3 bucket" in {
-        // this is bucket with test data at minio public server https://play.min.io:9000/minio/tap-s3-json/
         val completable =
+          // this is bucket with test data at minio public server https://play.min.io:9000/minio/tap-s3-json/
           new S3Source("tap-s3-json").object_contents
             .withAttributes(
               S3Attributes.settings(
