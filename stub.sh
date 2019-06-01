@@ -35,7 +35,12 @@ HELP
 # ------------------------
 
 # By default we want to set the tap to ignore headers, so we add them to the argument list
-parsed=("-Dtap.ignore_headers=true" '-Dtap.json=""' '-Dtap.bucket_name=pmt-events-datalake-storage-prod' '-Dtap.prefix=PMT_ORDER/ORDER_CREATED')
+parsed=(
+    "-Dtap.ignore_headers=true" '-Dtap.json=""'
+    '-Dtap.bucket_name=pmt-events-datalake-storage-prod'
+    '-Dtap.prefix=PMT_ORDER/ORDER_CREATED'
+    '-Dtap.limit=20'
+)
 # and then we loop through the user arguments
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -50,6 +55,10 @@ while [[ $# -gt 0 ]]; do
         --config)
             parsed+=("-Dconfig.file=$2")
             shift 2
+            ;;
+        --unbounded)
+            parsed+=("-Dtap.limit=0")
+            shift
             ;;
         *)
             option=${1##*-}; value=$2

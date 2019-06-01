@@ -182,6 +182,36 @@ class TestTapS3Json
         val listingResult = completable.futureValue
         listingResult.size shouldBe 4
       }
+      "success to stream with a records limit" in {
+        val completable =
+          // this is bucket with test data at minio public server https://play.min.io:9000/minio/tap-s3-json/
+          new S3Source("tap-s3-json", limit = Some(3)).object_contents
+            .withAttributes(
+              S3Attributes.settings(
+                S3Settings()
+                  .withCredentialsProvider(rightCredentialsProvider)
+                  .withS3RegionProvider(rightRegionProvider)
+                  .withEndpointUrl(rightEndpoint)
+              )
+            )
+            .runWith(Sink.seq)
+
+        val completableNoLimit =
+        // this is bucket with test data at minio public server https://play.min.io:9000/minio/tap-s3-json/
+          new S3Source("tap-s3-json", limit = Some(0)).object_contents
+            .withAttributes(
+              S3Attributes.settings(
+                S3Settings()
+                  .withCredentialsProvider(rightCredentialsProvider)
+                  .withS3RegionProvider(rightRegionProvider)
+                  .withEndpointUrl(rightEndpoint)
+              )
+            )
+            .runWith(Sink.seq)
+
+        completable.futureValue.size shouldBe 3
+        completableNoLimit.futureValue.size shouldBe 4
+      }
     }
 
 }

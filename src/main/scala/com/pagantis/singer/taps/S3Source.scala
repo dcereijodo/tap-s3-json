@@ -15,7 +15,8 @@ object S3Source extends PartitioningUtils {
       config.as[Option[String]]("prefix"),
       buildPartitioningSubPath(
         config.as[Option[String]]("partitioning.key"),
-        config.as[Option[String]]("partitioning.value"))
+        config.as[Option[String]]("partitioning.value")),
+      config.as[Option[Long]]("limit")
     )
   }
 
@@ -24,7 +25,8 @@ object S3Source extends PartitioningUtils {
 class S3Source(
                 bucketName: String,
                 s3Preffix: Option[String] =  None,
-                partitioningSubPath: Option[String] = None
+                partitioningSubPath: Option[String] = None,
+                limit: Option[Long] = None
               )
 extends PartitioningUtils
 {
@@ -36,7 +38,7 @@ extends PartitioningUtils
 
     val objectsToProcess = object_keys
 
-    objectsToProcess
+    val contents = objectsToProcess
       .flatMapConcat(objectHandler =>
         S3
           .download(bucketName, objectHandler)
@@ -48,6 +50,11 @@ extends PartitioningUtils
           .flatMapConcat(p => p)
       )
       .mapConcat(_.utf8String.split("\n").toList)
+
+    limit match {
+      case Some(max) if max > 0 => contents take max
+      case _ => contents
+    }
   }
 
 }
