@@ -24,7 +24,8 @@ libraryDependencies ++= Seq(
 
 lazy val make = inputKey[Unit]("Create a binary with the tap as a command line util")
 make := {
-  "cat stub.sh target/scala-2.12/tap-s3-json-assembly-0.1-SNAPSHOT.jar" #> file("tap-s3-json") !
+  "cat stub.sh target/scala-2.12/tap-s3-json-assembly-0.1-SNAPSHOT.jar" #> file("tap-s3-json") !;
+  "chmod +x tap-s3-json" !
 }
 lazy val install = inputKey[Unit]("Install tap as a command line util")
 install := {

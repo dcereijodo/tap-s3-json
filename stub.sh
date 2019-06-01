@@ -7,6 +7,7 @@ if test -n "$JAVA_HOME"; then
 fi
 
 show_help() {
+
     cat << HELP
 
     Tap JSON contents of an S3 bucket to the standard output
@@ -27,8 +28,12 @@ HELP
 : ${AWS_REGION=eu-west-1}
 : ${AWS_PROFILE=default}
 : ${LOG_LEVEL=INFO}
+
+# Interpret user arguments
+# By default we want to set the tap to ignore headers
+set_ignore_headers=1
 if [ $# -eq 0 ]; then
-    exec "$java" -jar $MYSELF
+    exec "$java" -Dtap.ignore_headers=true -jar $MYSELF
     exit 1
 else
     # Parse options
@@ -48,13 +53,19 @@ else
                 shift 2
                 ;;
             *)
-                option=$1; value=$2
+                option=${1##*-}; value=$2
+                if [ $option = "tap.ignore_headers" ]; then
+                    set_ignore_headers=0
+                fi
                 parsed+=("-D$option=$value")
                 shift 2
                 ;;
         esac
     done
-
-    exec "$java" "${parsed[*]}" -jar $MYSELF
+    if [[ set_ignore_headers ]]; then
+        exec "$java" -Dtap.ignore_headers=true "${parsed[*]}" -jar $MYSELF
+    else
+        exec "$java" "${parsed[*]}" -jar $MYSELF
+    fi
     exit
 fi
