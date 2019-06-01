@@ -13,6 +13,7 @@ show_help() {
 
     Optional arguments:
         -h,--help, help: Will display this
+        -v: Sets the logging level to DEBUG
         --config: Provide a HOCON or JSON configuration file
 
     All other arguments provided will be passed to the application as a JVM parameter.
@@ -25,6 +26,7 @@ HELP
 # Set defaults for environment variables
 : ${AWS_REGION=eu-west-1}
 : ${AWS_PROFILE=default}
+: ${LOG_LEVEL=INFO}
 if [ $# -eq 0 ]; then
     exec "$java" -jar $MYSELF
     exit 1
@@ -38,7 +40,7 @@ else
                 exit 0
                 ;;
             -v)
-                verbose=1
+                LOG_LEVEL=DEBUG
                 shift
                 ;;
             --config)
