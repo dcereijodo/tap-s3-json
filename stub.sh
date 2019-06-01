@@ -27,7 +27,7 @@ HELP
 # Set defaults for environment variables
 : ${AWS_REGION=eu-west-1}
 : ${AWS_PROFILE=default}
-: ${LOG_LEVEL=INFO}
+: ${LOG_LEVEL=ERROR}
 
 # Interpret user arguments
 # By default we want to set the tap to ignore headers
