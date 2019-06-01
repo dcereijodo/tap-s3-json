@@ -71,8 +71,17 @@ If you want to install the tap as a command on your system
 ```bash
 git clone git@github.com:dcereijodo/tap-s3-json.git && cd tap-s3-json
 
-sbt package && sbt assembly && sbt install
+sbt package && sbt assembly && sbt make && sbt install
 ```
+The command line invocator sets defaults
+* `LOG_LEVEL` => `ERROR`
+* `ignore_headers` => `true`
+* `json.paths` => `null` (raw mode)
+* `bucket_name` => `pmt-events-datalake-storage-prod`
+* `prefix` => `PMT_ORDER/ORDER_CREATED`
+
+Though these can be overwritten using appropriate arguments to `tap-s3-json`. For more information check the
+help with `tap-s3-json help`.
 
 ## Testing
 Integration tests are based on [minio](https://github.com/minio/minio) public object store service.

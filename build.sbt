@@ -29,6 +29,5 @@ make := {
 }
 lazy val install = inputKey[Unit]("Install tap as a command line util")
 install := {
-  make
   "cp tap-s3-json /usr/local/bin" !
 }

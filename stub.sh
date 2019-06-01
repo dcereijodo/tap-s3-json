@@ -1,4 +1,5 @@
 #!/bin/bash
+# https://coderwall.com/p/ssuaxa/how-to-make-a-jar-file-linux-executable
 MYSELF=`which "$0" 2>/dev/null`
 [ $? -gt 0 -a -f "$0" ] && MYSELF="./$0"
 java=java
@@ -29,43 +30,36 @@ HELP
 : ${AWS_PROFILE=default}
 : ${LOG_LEVEL=ERROR}
 
+# ------------------------
 # Interpret user arguments
-# By default we want to set the tap to ignore headers
-set_ignore_headers=1
-if [ $# -eq 0 ]; then
-    exec "$java" -Dtap.ignore_headers=true -jar $MYSELF
-    exit 1
-else
-    # Parse options
-    parsed=()
-    while [[ $# -gt 0 ]]; do
-        case $1 in
-            -h|-\?|--help|help)
-                show_help
-                exit 0
-                ;;
-            -v)
-                LOG_LEVEL=DEBUG
-                shift
-                ;;
-            --config)
-                parsed+=("-Dconfig.file=$2")
-                shift 2
-                ;;
-            *)
-                option=${1##*-}; value=$2
-                if [ $option = "tap.ignore_headers" ]; then
-                    set_ignore_headers=0
-                fi
-                parsed+=("-D$option=$value")
-                shift 2
-                ;;
-        esac
-    done
-    if [[ set_ignore_headers ]]; then
-        exec "$java" -Dtap.ignore_headers=true "${parsed[*]}" -jar $MYSELF
-    else
-        exec "$java" "${parsed[*]}" -jar $MYSELF
-    fi
-    exit
-fi
+# ------------------------
+
+# By default we want to set the tap to ignore headers, so we add them to the argument list
+parsed=("-Dtap.ignore_headers=true" '-Dtap.json=""' '-Dtap.bucket_name=pmt-events-datalake-storage-prod' '-Dtap.prefix=PMT_ORDER/ORDER_CREATED')
+# and then we loop through the user arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        -h|-\?|--help|help)
+            show_help
+            exit 0
+            ;;
+        -v)
+            LOG_LEVEL=DEBUG
+            shift
+            ;;
+        --config)
+            parsed+=("-Dconfig.file=$2")
+            shift 2
+            ;;
+        *)
+            option=${1##*-}; value=$2
+            parsed+=("-D$option=$value")
+            shift 2
+            ;;
+    esac
+done
+parsed+=("-jar")
+parsed+=($MYSELF)
+
+java ${parsed[*]}
+exit
