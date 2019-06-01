@@ -4,7 +4,7 @@ two modes, `jsonpaths` and `raw`. In the `raw` mode, given an S3 bucket and opti
 contents of the bucket to a singer stream called `raw`. If a set of `jsonpath`s is provided in the configuration,
 the tap will output the first match for each key if any to an singer stream called `jsonpath-matches`.
 
-# JsonPaths mode example
+## JsonPaths mode example
 Given an S3 bucket `bucket-with-jsons` with two S3 objects
 ```json
 # pseudo-folder/object1.json
@@ -46,7 +46,7 @@ tap-s3-json --config application.conf
 # { "type": "RECORD", stream: "jsonpath-matches", "record": {"$.action": "LOAN_CLOSED", "$.payload.loan_id": "9044cfdd68e-7d08-4554-1d-633d9wsn302"} }
 ```
 
-# Raw mode example
+## Raw mode example
 If no `paths` key is provided in the configuration, the tap will run in `raw` mode
 ```bash
 tap-s3-json --config application.conf
@@ -55,7 +55,7 @@ tap-s3-json --config application.conf
 # { "type": "RECORD", stream: "raw", "record": {"action": "LOAN_CLOSED", "payload": {"loan_id": "9044cfdd68e-7d08-4554-1d-633d9wsn302", "closed_at": "2018-04-25T04:24:22.000000Z" }}}
 ```
 
-# Build and Run
+## Build and Run
 This is an [SBT](https://www.scala-sbt.org/) project. If you don't have sbt installed, do so by running `brew install sbt`
 on Mac. Then you can compile and package the project with
 ```bash
@@ -66,10 +66,27 @@ And next run the tap like
 java -jar target/scala-2.12/tap-s3-json-assembly-0.1-SNAPSHOT.jar -Dconfig.file=application.conf
 ```
 
-# Testing
+## Install
+If you want to install the tap as a command on your system
+```bash
+git clone git@github.com:dcereijodo/tap-s3-json.git && cd tap-s3-json
+
+sbt package && sbt assembly && sbt make && sbt install
+```
+The command line invocator sets defaults
+* `LOG_LEVEL` => `ERROR`
+* `ignore_headers` => `true`
+* `json.paths` => `null` (raw mode)
+* `bucket_name` => `pmt-events-datalake-storage-prod`
+* `prefix` => `PMT_ORDER/ORDER_CREATED`
+
+Though these can be overwritten using appropriate arguments to `tap-s3-json`. For more information check the
+help with `tap-s3-json help`.
+
+## Testing
 Integration tests are based on [minio](https://github.com/minio/minio) public object store service.
 
-# Date-based tapping
+## Date-based tapping
 One can tap using an environment variable `PARTITION_VALUE` provided the partitioning configuration is defined
 in the `application.conf`
 ```hocon

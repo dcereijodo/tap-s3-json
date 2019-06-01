@@ -12,7 +12,7 @@ object S3Source extends PartitioningUtils {
     import net.ceedubs.ficus.Ficus._
     new S3Source(
       config.getString("bucket_name"),
-      config.as[Option[String]]("s3_preffix"),
+      config.as[Option[String]]("prefix"),
       buildPartitioningSubPath(
         config.as[Option[String]]("partitioning.key"),
         config.as[Option[String]]("partitioning.value"))

@@ -21,3 +21,13 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-stream-testkit" % "2.5.21" % Test,
   "org.scalatest" %% "scalatest" % "3.0.5" % Test
 )
+
+lazy val make = inputKey[Unit]("Create a binary with the tap as a command line util")
+make := {
+  "cat stub.sh target/scala-2.12/tap-s3-json-assembly-0.1-SNAPSHOT.jar" #> file("tap-s3-json") !;
+  "chmod +x tap-s3-json" !
+}
+lazy val install = inputKey[Unit]("Install tap as a command line util")
+install := {
+  "cp tap-s3-json /usr/local/bin" !
+}

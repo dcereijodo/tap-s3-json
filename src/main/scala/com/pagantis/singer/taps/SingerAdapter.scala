@@ -3,6 +3,7 @@ package com.pagantis.singer.taps
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
+import com.typesafe.config.ConfigFactory
 import spray.json.{DefaultJsonProtocol, JsString, JsValue, RootJsonFormat}
 
 trait SingerMessage {
@@ -30,12 +31,14 @@ object JsonProtocol extends DefaultJsonProtocol {
 
 object SingerAdapter {
 
-  def fromConfig =
-    new SingerAdapter(JsonPaths.fromConfig)
+  def fromConfig = {
+    val config = ConfigFactory.load().getConfig("tap")
+    new SingerAdapter(JsonPaths.fromConfig, config.getBoolean("ignore_headers"))
+  }
 
 }
 
-class SingerAdapter(jsonPaths: Option[JsonPaths]) {
+class SingerAdapter(jsonPaths: Option[JsonPaths], ignoreHeaders: Boolean = false) {
   import spray.json._
   import JsonProtocol._
 
@@ -46,8 +49,10 @@ class SingerAdapter(jsonPaths: Option[JsonPaths]) {
     }
   }
 
-  def toJsonString(tapS3JsonRecord: TapS3JsonRecord): String =
-    tapS3JsonRecord.toJson.compactPrint
+  def toJsonString(tapS3JsonRecord: TapS3JsonRecord): String = {
+    if(ignoreHeaders) tapS3JsonRecord.record.compactPrint
+    else tapS3JsonRecord.toJson.compactPrint
+  }
 
 }
 
