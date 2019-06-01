@@ -55,6 +55,12 @@ tap-s3-json --config application.conf
 # { "type": "RECORD", stream: "raw", "record": {"action": "LOAN_CLOSED", "payload": {"loan_id": "9044cfdd68e-7d08-4554-1d-633d9wsn302", "closed_at": "2018-04-25T04:24:22.000000Z" }}}
 ```
 
+## Configuration
+Yo can find examples and descriptions for all configurations supported by `tap-s3-json` in the [sample configuration file](src/main/resources/application.conf).
+All this properties can be overridden when using the command by providing appropriate arguments. Check the `tap-s3-json help` for more information.
+
+The util uses `logback` for logging. The default logging configuration can be found in the [`logback.xml` file](src/main/resources/logback.xml).
+
 ## Build and Run
 This is an [SBT](https://www.scala-sbt.org/) project. If you don't have sbt installed, do so by running `brew install sbt`
 on Mac. Then you can compile and package the project with
@@ -73,14 +79,15 @@ git clone git@github.com:dcereijodo/tap-s3-json.git && cd tap-s3-json
 
 sbt package && sbt assembly && sbt make && sbt install
 ```
-The command line invocator sets defaults
-* `LOG_LEVEL` => `ERROR`
-* `ignore_headers` => `true`
-* `json.paths` => `null` (raw mode)
-* `bucket_name` => `pmt-events-datalake-storage-prod`
-* `prefix` => `PMT_ORDER/ORDER_CREATED`
+The command uses defaults
+* Logback `LOG_LEVEL` :arrow_right: `ERROR`
+* Tap `ignore_headers` :arrow_right: `true`
+* Tap `json.paths` :arrow_right: `null` (raw mode)
+* Tap `bucket_name` :arrow_right: `pmt-events-datalake-storage-prod`
+* Tap `prefix` :arrow_right: `PMT_ORDER/ORDER_CREATED`
+* Tap `limit` :arrow_right: `20`
 
-Though these can be overwritten using appropriate arguments to `tap-s3-json`. For more information check the
+Though all these can be overwritten using appropriate arguments to `tap-s3-json`. For more information check the
 help with `tap-s3-json help`.
 
 ## Testing

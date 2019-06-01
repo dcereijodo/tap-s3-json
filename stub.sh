@@ -17,6 +17,7 @@ show_help() {
         -h,--help, help: Will display this
         -v: Sets the logging level to DEBUG
         --config: Provide a HOCON or JSON configuration file
+        --unbounded: Sets 'tap.limit' to 0 (no limit)
 
     All other arguments provided will be passed to the application as a JVM parameter.
     For example --some.key myval will translate to JVM parameter -Dsome.key=myval.
