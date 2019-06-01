@@ -10,7 +10,7 @@ class TestSingerModel extends FlatSpec with Matchers {
   import spray.json._
   import JsonProtocol._
 
-  "TapRecord" should "serialize two match to Singer Specification" in {
+  "TapRecord" should "serialize two matches to Singer Specification" in {
 
     val tapRecord = TapS3JsonRecord(
       time_extracted = Some(java.time.LocalDateTime.of(2019, 4, 23, 12, 0, 0).atZone(ZoneId.of("UTC"))),
@@ -102,6 +102,21 @@ class TestSingerModel extends FlatSpec with Matchers {
         time_extracted = None,
         record = inputJson.parseJson
       )
+
+  }
+
+  "SingerAdapter" should "ignore headers when printing records" in {
+    val singerAdapter = new SingerAdapter(jsonPaths = None, ignoreHeaders = true)
+    val inputJson =
+      """
+        | {
+        |   "key1": {
+        |     "sub-key": 34
+        |   },
+        |   "key2": false
+        | }
+      """.stripMargin.parseJson.compactPrint
+    singerAdapter.toJsonString(singerAdapter.toSingerRecord(inputJson)) shouldBe inputJson
 
   }
 
