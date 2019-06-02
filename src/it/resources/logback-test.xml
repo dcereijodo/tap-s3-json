@@ -11,15 +11,15 @@
             <Pattern>%msg%n</Pattern>
         </encoder>
     </appender>
-    <logger name="com.pagantis" level="DEBUG"
+    <logger name="com.pagantis" level="OFF"
             additivity="false">
         <appender-ref ref="STDERR" />
     </logger>
-    <logger name="singer.logger" level="DEBUG"
+    <logger name="singer.logger" level="OFF"
             additivity="false">
         <appender-ref ref="STDOUT" />
     </logger>
-    <root level="INFO">
+    <root level="OFF">
         <appender-ref ref="STDERR" />
     </root>
 </configuration>

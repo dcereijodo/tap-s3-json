@@ -4,6 +4,7 @@ two modes, `jsonpaths` and `raw`. In the `raw` mode, given an S3 bucket and opti
 contents of the bucket to a singer stream called `raw`. If a set of `jsonpath`s is provided in the configuration,
 the tap will output the first match for each key if any to an singer stream called `jsonpath-matches`.
 
+
 ## JsonPaths mode example
 Given an S3 bucket `bucket-with-jsons` with two S3 objects
 ```json
@@ -57,7 +58,7 @@ tap-s3-json --config application.conf
 
 ## Configuration
 Yo can find examples and descriptions for all configurations supported by `tap-s3-json` in the [sample configuration file](src/main/resources/application.conf).
-All this properties can be overridden when using the command by providing appropriate arguments. Check the `tap-s3-json help` for more information.
+All this properties can be overridden when using the tap from the command line by providing appropriate arguments. Check the `tap-s3-json help` for more information.
 
 The util uses `logback` for logging. The default logging configuration can be found in the [`logback.xml` file](src/main/resources/logback.xml).
 
@@ -69,14 +70,16 @@ sbt package && sbt assembly
 ```
 And next run the tap like
 ```bash
-java -jar target/scala-2.12/tap-s3-json-assembly-0.1-SNAPSHOT.jar -Dconfig.file=application.conf
+sbt run
+```
+or if you prefer using bare java
+```bash
+java -jar target/scala-2.12/tap-s3-json-assembly-0.1-SNAPSHOT.jar [-Dconfig.file=application.conf]
 ```
 
-## Install
+### Install
 If you want to install the tap as a command on your system
 ```bash
-git clone git@github.com:dcereijodo/tap-s3-json.git && cd tap-s3-json
-
 sbt package && sbt assembly && sbt make && sbt install
 ```
 The command uses defaults
@@ -89,9 +92,6 @@ The command uses defaults
 
 Though all these can be overwritten using appropriate arguments to `tap-s3-json`. For more information check the
 help with `tap-s3-json help`.
-
-## Testing
-Integration tests are based on [minio](https://github.com/minio/minio) public object store service.
 
 ## Date-based tapping
 One can tap using an environment variable `PARTITION_VALUE` provided the partitioning configuration is defined
@@ -109,3 +109,7 @@ tap {
 }
 ```
 will output all the records in the `my-table\date=PARTITION_VALUE` S3 prefix.
+
+## Integration Tests
+Integration tests are based on [minio](https://github.com/minio/minio) public object store service. They are skipped by
+default during build. If you want to run them, so can do so with `sbt it:test`.
