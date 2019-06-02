@@ -1,4 +1,4 @@
-package com.pagantis.singer.taps.test
+package com.pagantis.singer.taps.it
 
 import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
