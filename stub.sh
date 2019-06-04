@@ -27,9 +27,15 @@ HELP
 }
 
 # Set defaults for environment variables
-: ${AWS_REGION=eu-west-1}
-: ${AWS_PROFILE=default}
-: ${LOG_LEVEL=ERROR}
+AWS_REGION=${AWS_REGION:=eu-west-1}
+AWS_PROFILE=${AWS_PROFILE:=default}
+LOG_LEVEL=${LOG_LEVEL:=ERROR}
+
+export AWS_REGION=$AWS_REGION
+export AWS_PROFILE=$AWS_PROFILE
+export LOG_LEVEL=$LOG_LEVEL
+
+echo "[tap-s3] profile -> $AWS_PROFILE - region -> $AWS_REGION - loglevel -> $LOG_LEVEL" 1>&2
 
 # ------------------------
 # Interpret user arguments
