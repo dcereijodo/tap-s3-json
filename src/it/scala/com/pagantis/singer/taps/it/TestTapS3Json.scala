@@ -114,7 +114,7 @@ class TestTapS3Json
         }
       }
 
-      "success to stream from a bucket even if provided preffix does not exist" in {
+      "success to stream from a bucket even if provided prefix does not exist" in {
         within(50 seconds) {
           new S3Source("183p1xn63oohgdtu3jcposeygupg5mdc", Some("madeup-path")).object_contents // this is random bucket at minio public server https://play.min.io:9000/minio/
             .withAttributes(
@@ -211,6 +211,21 @@ class TestTapS3Json
 
         completable.futureValue.size shouldBe 3
         completableNoLimit.futureValue.size shouldBe 4
+      }
+      "success to stream a long file with correct framing" in {
+        val completable =
+        // this is a bucket in minio service with multi-line-file-long file
+          new S3Source("tap-s3-framing-tests").object_contents
+            .withAttributes(
+              S3Attributes.settings(
+                S3Settings()
+                  .withCredentialsProvider(rightCredentialsProvider)
+                  .withS3RegionProvider(rightRegionProvider)
+                  .withEndpointUrl(rightEndpoint)
+              )
+            )
+            .runWith(Sink.seq)
+        completable.futureValue.size shouldBe 273
       }
     }
 

@@ -38,11 +38,14 @@ object TapS3Json extends App {
         Http().shutdownAllConnectionPools.andThen { case _ =>
           materializer.shutdown
           system.terminate
+        } andThen {
+          Console.flush()
+          res match {
+            case Success(_) => sys.exit(0)
+            case _ => sys.exit(1)
+          }
         }
-        res match {
-          case Success(_) => sys.exit(0)
-          case _ => sys.exit(1)
-        }
+
       }
     )
 
