@@ -38,13 +38,8 @@ object TapS3Json extends App {
   // and then terminate the materializer and actor system. This is to avoid akka to complaint about abrupt termination
   // as it is described in this issue https://github.com/akka/akka-http/issues/497
   // This shutdown sequence was copied from another related issue: https://github.com/akka/akka-http/issues/907#issuecomment-345288919
-  def shutdownSequence = {
-    Http().shutdownAllConnectionPools flatMap ( _ => {
-        materializer.shutdown
-        system.terminate
-      }
-    )
-  }
+  def shutdownSequence =
+    Http().shutdownAllConnectionPools
 
   Await.ready(tapComputation, Duration.Inf)
 
