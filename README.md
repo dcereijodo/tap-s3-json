@@ -78,7 +78,7 @@ java -jar target/scala-2.12/tap-s3-json-assembly-0.1-SNAPSHOT.jar [-Dconfig.file
 ```
 
 ### Install
-If you want to install the tap as a command on your system
+If you want to install the tap as a command on your system (tried on Mac)
 ```bash
 sbt package && sbt assembly && sbt make && sbt install
 ```
