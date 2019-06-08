@@ -15,9 +15,11 @@ show_help() {
 
     Optional arguments:
         -h,--help, help: Will display this
-        -v: Sets the logging level to DEBUG
+        -v, -d, --debug: Sets the logging level to DEBUG
         --config: Provide a HOCON or JSON configuration file
         --unbounded: Sets 'tap.limit' to 0 (no limit)
+        --date: Specifies a date to be tapped. When specified, mode will be 'unbounded'.
+        --profile: AWS profile. Overrides environment variable AWS_PROFILE
 
     All other arguments provided will be passed to the application as a JVM parameter.
     For example --some.key myval will translate to JVM parameter -Dsome.key=myval.
@@ -30,12 +32,6 @@ HELP
 AWS_REGION=${AWS_REGION:=eu-west-1}
 AWS_PROFILE=${AWS_PROFILE:=default}
 LOG_LEVEL=${LOG_LEVEL:=ERROR}
-
-export AWS_REGION=$AWS_REGION
-export AWS_PROFILE=$AWS_PROFILE
-export LOG_LEVEL=$LOG_LEVEL
-
-echo "[tap-s3] profile -> $AWS_PROFILE - region -> $AWS_REGION - loglevel -> $LOG_LEVEL" 1>&2
 
 # ------------------------
 # Interpret user arguments
@@ -55,7 +51,7 @@ while [[ $# -gt 0 ]]; do
             show_help
             exit 0
             ;;
-        -v)
+        -d|--debug|-v)
             LOG_LEVEL=DEBUG
             shift
             ;;
@@ -67,6 +63,15 @@ while [[ $# -gt 0 ]]; do
             parsed+=("-Dtap.limit=0")
             shift
             ;;
+        --profile)
+            AWS_PROFILE=$2
+            shift 2
+            ;;
+        --date)
+            parsed+=("-Dtap.partitioning.value=$2")
+            parsed+=("-Dtap.limit=0") # when a --date parameter is provided assume 'unbounded' mode
+            shift 2
+            ;;
         *)
             option=${1##*-}; value=$2
             parsed+=("-D$option=$value")
@@ -77,5 +82,12 @@ done
 parsed+=("-jar")
 parsed+=($MYSELF)
 
+echo "[tap-s3] profile -> $AWS_PROFILE - region -> $AWS_REGION - loglevel -> $LOG_LEVEL" 1>&2
+
+export AWS_PROFILE=$AWS_PROFILE
+export AWS_REGION=$AWS_REGION
+export LOG_LEVEL=$LOG_LEVEL
+
 java ${parsed[*]}
+
 exit
