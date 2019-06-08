@@ -7,10 +7,10 @@
         </encoder>
     </appender>
     <logger name="com.pagantis" level="${LOG_LEVEL}"
-            additivity="true">
+            additivity="false">
         <appender-ref ref="STDERR" />
     </logger>
-    <logger name="akka" level="${LOG_LEVEL}" additivity="true">
+    <logger name="akka" level="${LOG_LEVEL}" additivity="false">
         <appender-ref ref="STDERR" />
     </logger>
     <root level="${LOG_LEVEL}">

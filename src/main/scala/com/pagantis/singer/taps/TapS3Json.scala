@@ -22,12 +22,15 @@ object TapS3Json extends App {
 
   val singerAdapter = SingerAdapter.fromConfig
 
+  val startTime = System.nanoTime()
+
   // stream the bucket contents for the provided json paths as singer messages to stdout
   S3Source.fromConfig.object_contents
     .log(clazz)
-    .map(singerAdapter.toSingerRecord(_))
+    .mapAsync(12)( contentLine => Future{ singerAdapter.toSingerRecord(contentLine) })
     .log(clazz)
-    .map(singerAdapter.toJsonString(_))
+    .async
+    .mapAsync(12)(singerMessage => Future{ singerAdapter.toJsonString(singerMessage)})
     // TODO: instead of writing to stdout a cleaner approach would be using another logger for singer messages
     .runForeach(println(_))
     // Now comes a fairly complicated shutdown sequence, which first shuts down the underlying http infrastructure
@@ -41,7 +44,10 @@ object TapS3Json extends App {
         } andThen {
           Console.flush()
           res match {
-            case Success(_) => sys.exit(0)
+            case Success(_) => {
+              standardLogger.info(s"Total execution time: ${(System.nanoTime() - startTime)/1000000000} seconds")
+              sys.exit(0)
+            }
             case _ => sys.exit(1)
           }
         }
