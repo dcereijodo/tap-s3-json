@@ -31,7 +31,7 @@ object JsonProtocol extends DefaultJsonProtocol {
 
 object SingerAdapter {
 
-  def fromConfig = {
+  def fromConfig: SingerAdapter = {
     val config = ConfigFactory.load().getConfig("tap")
     new SingerAdapter(JsonPaths.fromConfig, config.getBoolean("ignore_headers"))
   }
@@ -42,7 +42,7 @@ class SingerAdapter(jsonPaths: Option[JsonPaths], ignoreHeaders: Boolean = false
   import spray.json._
   import JsonProtocol._
 
-  def toSingerRecord(line: String) = {
+  def toSingerRecord(line: String): TapS3JsonRecord = {
     jsonPaths match {
       case Some(paths) => TapS3JsonRecord(time_extracted = None, record = paths.asMap(line).toJson)
       case None => TapS3JsonRecord(stream = "raw", time_extracted = None, record = line.parseJson)

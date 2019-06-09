@@ -20,6 +20,7 @@ show_help() {
         --unbounded: Sets 'tap.limit' to 0 (no limit)
         --date: Specifies a date to be tapped. When specified, mode will be 'unbounded'.
         --profile: AWS profile. Overrides environment variable AWS_PROFILE
+        --region: AWS region. Overrides environment variable AWS_REGION
 
     All other arguments provided will be passed to the application as a JVM parameter.
     For example --some.key myval will translate to JVM parameter -Dsome.key=myval.
@@ -67,6 +68,10 @@ while [[ $# -gt 0 ]]; do
             AWS_PROFILE=$2
             shift 2
             ;;
+        --region)
+            AWS_REGION=$2
+            shift 2
+            ;;
         --date)
             parsed+=("-Dtap.partitioning.value=$2")
             parsed+=("-Dtap.limit=0") # when a --date parameter is provided assume 'unbounded' mode
@@ -80,13 +85,13 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 parsed+=("-jar")
-parsed+=($MYSELF)
+parsed+=(${MYSELF})
 
 echo "[tap-s3] profile -> $AWS_PROFILE - region -> $AWS_REGION - loglevel -> $LOG_LEVEL" 1>&2
 
-export AWS_PROFILE=$AWS_PROFILE
-export AWS_REGION=$AWS_REGION
-export LOG_LEVEL=$LOG_LEVEL
+export AWS_PROFILE=${AWS_PROFILE}
+export AWS_REGION=${AWS_REGION}
+export LOG_LEVEL=${LOG_LEVEL}
 
 java ${parsed[*]}
 
