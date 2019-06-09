@@ -95,8 +95,8 @@ or if you prefer using bare java
 java -jar target/scala-2.12/tap-s3-json-assembly-0.1-SNAPSHOT.jar [-Dconfig.file=application.conf]
 ```
 
-### Install
-If you want to install the tap as a command on your system (tried on Mac)
+## CLI
+In the `cli` folder a `stub.sh` wrapps the call to the tap with a set of defaults and options aliases so a friendly interface can be exposed to the user in the form of a CLI util. If you want to install this wrapped version of the tap as command on your system (tried on Mac)
 ```bash
 sbt package && sbt assembly && sbt make && sbt install
 ```
@@ -115,6 +115,8 @@ The command uses defaults
 Though all these can be overwritten using appropriate arguments to `tap-s3-json`. For more information check the
 help with `tap-s3-json help`.
 
+`cli.bats` defines a few [bats tests](https://github.com/sstephenson/bats) that check some CLI basic functionallity after installation.
+
 ## Date-based tapping
 One can tap using an environment variable `PARTITION_VALUE` provided the partitioning configuration is defined
 in the `application.conf`
@@ -123,7 +125,7 @@ tap {
 
   # some other configs
   s3_perefix = "my-table"
-  
+
   partitioning {
     key = "date"
     value = ${?PARTITION_VALUE}
