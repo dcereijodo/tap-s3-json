@@ -7,7 +7,7 @@ import net.ceedubs.ficus.Ficus._
 
 object JsonPaths {
 
-  def fromConfig =
+  def fromConfig: Option[JsonPaths] =
     ConfigFactory.load().getConfig("tap")
       .as[Option[List[String]]]("json.paths")
       .map(new JsonPaths(_))

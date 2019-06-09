@@ -4,8 +4,8 @@ import akka.Done
 import akka.actor.ActorSystem
 import akka.event.{Logging, LoggingAdapter}
 import akka.http.scaladsl.Http
-import akka.stream.ActorMaterializer
-import akka.stream.alpakka.s3.BucketAccess.{AccessDenied, AccessGranted, NotExists}
+import akka.stream.{ActorMaterializer, Attributes}
+import akka.stream.alpakka.s3.BucketAccess.{AccessGranted, NotExists}
 import akka.stream.alpakka.s3.scaladsl.S3
 import akka.stream.alpakka.s3.{S3Attributes, S3Settings}
 import akka.stream.scaladsl.{Sink, Source}
@@ -44,11 +44,7 @@ class TestTapS3Json
   {
 
     override def afterAll: Unit = {
-      implicit val ec: ExecutionContextExecutor = system.dispatcher
-      Http().shutdownAllConnectionPools.andThen { case _ =>
-        materializer.shutdown
-        TestKit.shutdownActorSystem(system)
-      }
+      Await.ready(Http().shutdownAllConnectionPools, 10 seconds)
     }
 
     implicit val materializer: ActorMaterializer = ActorMaterializer()
@@ -69,13 +65,21 @@ class TestTapS3Json
       override def getRegion: String = rightRegion
     }
 
+    val minioSettings: Attributes =
+      S3Attributes.settings(
+        S3Settings()
+          .withCredentialsProvider(rightCredentialsProvider)
+          .withS3RegionProvider(rightRegionProvider)
+          .withEndpointUrl(rightEndpoint)
+      )
+
     implicit val defaultPatience: PatienceConfig = PatienceConfig(90.seconds, 30.millis)
 
     val testBucketMustExist = "test-tap-s3-exists"
     val testBucketMustNotExist = "test-tap-s3-not-exists"
 
-    def fixtures = {
-      implicit val s3Settings = S3Attributes.settings(
+    private def fixtures = {
+      implicit val s3Settings: Attributes = S3Attributes.settings(
         S3Settings()
           .withCredentialsProvider(rightCredentialsProvider)
           .withS3RegionProvider(rightRegionProvider)
@@ -87,20 +91,18 @@ class TestTapS3Json
         S3.checkIfBucketExists(testBucketMustExist) flatMap {
           case AccessGranted => Future {Done}
           case NotExists => S3.makeBucket(testBucketMustExist)
-          case _  => {
+          case _  =>
             standardLogger.error("Could not setup must-exist bucket. Wrong credentials?")
             sys.exit(1)
-          }
         }
       // destroy missing bucket
       val testBucketDestroyed =
         S3.checkIfBucketExists(testBucketMustNotExist) flatMap {
           case AccessGranted => S3.deleteBucket(testBucketMustNotExist)
           case NotExists => Future {Done}
-          case _  => {
+          case _  =>
             standardLogger.error("Could not setup must-exist bucket. Wrong credentials?")
             sys.exit(1)
-          }
         }
       // fill buckets with test data
       def uploadString(body: String, key: String) = {
@@ -127,12 +129,21 @@ class TestTapS3Json
       val longMultilineBody =
         (longJson + "\n") * 500
       val putLongMultilineBody = testBucketCreated flatMap ( _ => uploadString(longMultilineBody, "long/long-multi-liner"))
+      // put nested keys
+      val putNestedKeys = testBucketCreated flatMap( _ => {
+            for {
+              _ <- uploadString(singleLineBody, "recursive/long-multi-liner")
+              _ <- uploadString(singleLineBody, "recursive/sub-folder/long-multi-liner")
+            } yield Done
+          }
+        )
 
       val fixtureReady = for {
         _ <- testBucketCreated
         _ <- testBucketDestroyed
         _ <- putSingleLine
         _ <- putMultiLineBody
+        _ <- putNestedKeys
       } yield Done
 
       Await.ready(fixtureReady, Duration.Inf)
@@ -145,7 +156,7 @@ class TestTapS3Json
 
       "fail to start when invalid credentials are provided" in {
         within(50 seconds) {
-          new S3Source(testBucketMustExist).object_contents // this is random bucket at minio public server https://play.min.io:9000/minio/00test/
+          new S3Source(testBucketMustExist).object_contents
             .withAttributes(
               S3Attributes.settings(
                 S3Settings()
@@ -162,14 +173,7 @@ class TestTapS3Json
       "fail when provided bucket name does not exist" in {
         within(50 seconds) {
           new S3Source(testBucketMustNotExist).object_contents
-            .withAttributes(
-              S3Attributes.settings(
-                S3Settings()
-                  .withCredentialsProvider(rightCredentialsProvider)
-                  .withS3RegionProvider(rightRegionProvider)
-                  .withEndpointUrl(rightEndpoint)
-              )
-            )
+            .withAttributes(minioSettings)
             .log("test-inexistent-bucket-name")
             .runWith(TestSink.probe[String]).request(1).expectError()
         }
@@ -177,46 +181,24 @@ class TestTapS3Json
 
       "success to start when valid credentials are provided" in {
         within(50 seconds) {
-          new S3Source(testBucketMustExist).object_contents // this is random bucket at minio public server https://play.min.io:9000/minio/
-            .withAttributes(
-              S3Attributes.settings(
-                S3Settings()
-                  .withCredentialsProvider(rightCredentialsProvider)
-                  .withS3RegionProvider(rightRegionProvider)
-                  .withEndpointUrl(rightEndpoint)
-              )
-            )
+          new S3Source(testBucketMustExist).object_contents
+            .withAttributes(minioSettings)
             .runWith(TestSink.probe[String]).request(1).expectNext()
         }
       }
 
       "success to stream from a bucket even if provided prefix does not exist" in {
         within(50 seconds) {
-          new S3Source(testBucketMustExist, Some("madeup-path")).object_contents // this is random bucket at minio public server https://play.min.io:9000/minio/
-            .withAttributes(
-              S3Attributes.settings(
-                S3Settings()
-                  .withCredentialsProvider(rightCredentialsProvider)
-                  .withS3RegionProvider(rightRegionProvider)
-                  .withEndpointUrl(rightEndpoint)
-              )
-            )
+          new S3Source(testBucketMustExist, Some("madeup-path")).object_contents
+            .withAttributes(minioSettings)
             .runWith(TestSink.probe[String]).request(1).expectComplete()
         }
       }
 
       "success to stream a single-line file from an S3 bucket" in {
         val completable =
-          // this is bucket with test data at minio public server https://play.min.io:9000/minio/tap-s3-json/
           new S3Source(testBucketMustExist, Some("short/single-liner")).object_contents
-            .withAttributes(
-              S3Attributes.settings(
-                S3Settings()
-                  .withCredentialsProvider(rightCredentialsProvider)
-                  .withS3RegionProvider(rightRegionProvider)
-                  .withEndpointUrl(rightEndpoint)
-              )
-            )
+            .withAttributes(minioSettings)
             .runWith(Sink.seq)
 
         val listingResult = completable.futureValue
@@ -225,16 +207,8 @@ class TestTapS3Json
 
       "success to stream a multiline file from an S3 bucket" in {
         val completable =
-          // this is bucket with test data at minio public server https://play.min.io:9000/minio/tap-s3-json/
           new S3Source(testBucketMustExist, Some("short/multi-liner")).object_contents
-            .withAttributes(
-              S3Attributes.settings(
-                S3Settings()
-                  .withCredentialsProvider(rightCredentialsProvider)
-                  .withS3RegionProvider(rightRegionProvider)
-                  .withEndpointUrl(rightEndpoint)
-              )
-            )
+            .withAttributes(minioSettings)
             .runWith(Sink.seq)
 
         val listingResult = completable.futureValue
@@ -243,16 +217,8 @@ class TestTapS3Json
 
       "success to stream a mixed single-line / multiline bucket S3 bucket" in {
         val completable =
-          // this is bucket with test data at minio public server https://play.min.io:9000/minio/tap-s3-json/
           new S3Source(testBucketMustExist, Some("short/")).object_contents
-            .withAttributes(
-              S3Attributes.settings(
-                S3Settings()
-                  .withCredentialsProvider(rightCredentialsProvider)
-                  .withS3RegionProvider(rightRegionProvider)
-                  .withEndpointUrl(rightEndpoint)
-              )
-            )
+            .withAttributes(minioSettings)
             .runWith(Sink.seq)
 
         val listingResult = completable.futureValue
@@ -262,26 +228,12 @@ class TestTapS3Json
       "success to stream with a records limit" in {
         val completable =
           new S3Source(testBucketMustExist, Some("short/"), limit = Some(3)).object_contents
-            .withAttributes(
-              S3Attributes.settings(
-                S3Settings()
-                  .withCredentialsProvider(rightCredentialsProvider)
-                  .withS3RegionProvider(rightRegionProvider)
-                  .withEndpointUrl(rightEndpoint)
-              )
-            )
+            .withAttributes(minioSettings)
             .runWith(Sink.seq)
 
         val completableNoLimit =
           new S3Source(testBucketMustExist, Some("short/"), limit = Some(0)).object_contents
-            .withAttributes(
-              S3Attributes.settings(
-                S3Settings()
-                  .withCredentialsProvider(rightCredentialsProvider)
-                  .withS3RegionProvider(rightRegionProvider)
-                  .withEndpointUrl(rightEndpoint)
-              )
-            )
+            .withAttributes(minioSettings)
             .runWith(Sink.seq)
 
         completable.futureValue.size shouldBe 3
@@ -290,18 +242,18 @@ class TestTapS3Json
 
       "success to stream a long json file with correct framing" in {
         val completable =
-        // this is a bucket in minio service with multi-line-file-long file
           new S3Source(testBucketMustExist, Some("long-multi-liner")).object_contents
-            .withAttributes(
-              S3Attributes.settings(
-                S3Settings()
-                  .withCredentialsProvider(rightCredentialsProvider)
-                  .withS3RegionProvider(rightRegionProvider)
-                  .withEndpointUrl(rightEndpoint)
-              )
-            )
+            .withAttributes(minioSettings)
             .runWith(Sink.seq)
         completable.futureValue.size shouldBe 500
+      }
+
+      "stream recursively folders and sub-folders" in {
+        val completable =
+          new S3Source(testBucketMustExist, Some("recursive")).object_contents
+            .withAttributes(minioSettings)
+            .runWith(Sink.seq)
+        completable.futureValue.size shouldBe 2
       }
 
     }

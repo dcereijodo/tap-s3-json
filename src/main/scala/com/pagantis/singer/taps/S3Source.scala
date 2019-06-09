@@ -9,7 +9,7 @@ import com.typesafe.config.ConfigFactory
 
 object S3Source extends PartitioningUtils {
 
-  def fromConfig = {
+  def fromConfig: S3Source = {
     val config = ConfigFactory.load().getConfig("tap")
     import net.ceedubs.ficus.Ficus._
     new S3Source(
@@ -28,7 +28,7 @@ object S3Source extends PartitioningUtils {
 
 class S3Source(
                 bucketName: String,
-                s3Preffix: Option[String] =  None,
+                s3Prefix: Option[String] =  None,
                 partitioningSubPath: Option[String] = None,
                 limit: Option[Long] = None,
                 maximumFrameLength: Int = 1024*4,
@@ -36,10 +36,9 @@ class S3Source(
               )
 extends PartitioningUtils
 {
-  val clazz = getClass.getName
 
   def object_keys: Source[String, NotUsed] =
-    S3.listBucket(bucketName, buildS3Preffix(s3Preffix, partitioningSubPath)).map(_.key)
+    S3.listBucket(bucketName, buildS3Prefix(s3Prefix, partitioningSubPath)).map(_.key)
 
   def object_contents: Source[String, NotUsed] = {
 

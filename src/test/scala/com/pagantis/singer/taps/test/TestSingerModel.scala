@@ -73,7 +73,6 @@ class TestSingerModel extends WordSpecLike with Matchers {
           |   "key2": false
           | }
         """.stripMargin) shouldBe TapS3JsonRecord(
-        stream = "jsonpath-matches",
         time_extracted = None,
         record = JsObject(
           "$.key1.sub-key" -> JsString("34")

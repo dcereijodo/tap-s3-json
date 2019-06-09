@@ -1,23 +1,22 @@
 package com.pagantis.singer.taps
 
-import com.pagantis.singer.taps.exceptions.InvalidPreffixException
+import com.pagantis.singer.taps.exceptions.InvalidPrefixException
 
 trait PartitioningUtils {
 
-  def buildS3Preffix(s3Preffix: Option[String], partitioningSubPath: Option[String]) =
-    s3Preffix match {
-      case Some(preffix) => {
-        if(preffix.size < 1) throw new InvalidPreffixException
+  def buildS3Prefix(s3Prefix: Option[String], partitioningSubPath: Option[String]): Option[String] =
+    s3Prefix match {
+      case Some(prefix) =>
+        if(prefix.length < 1) throw new InvalidPrefixException
         else {
           partitioningSubPath match {
-            case Some(subPath) => Some(s"$preffix/$subPath")
-            case None =>  Some(s"$preffix")
+            case Some(subPath) => Some(s"$prefix/$subPath")
+            case None =>  Some(s"$prefix")
           }
         }
-      }
       case None => partitioningSubPath
     }
 
-  def buildPartitioningSubPath(partitioningKey: Option[String], partitioningValue: Option[String]) =
+  def buildPartitioningSubPath(partitioningKey: Option[String], partitioningValue: Option[String]): Option[String] =
     partitioningValue.flatMap(partVal => partitioningKey.map(partKey => s"$partKey=$partVal"))
 }
