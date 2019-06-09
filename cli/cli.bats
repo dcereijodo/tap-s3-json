@@ -13,7 +13,12 @@
 }
 
 @test "records (20) are extracted when valid bucket is tapped" {
-  run tap-s3-json --profile ${VALID_PROFILE} --region ${VALID_REGION} --tap.bucket_name ${VALID_BUCKET}
+  run \
+    tap-s3-json \
+      --profile ${VALID_PROFILE} \
+      --region us-east-1 \
+      --tap.bucket_name ryft-public-sample-data \
+      --tap.prefix esRedditJson/
   [ "$status" -eq 0 ]
   [ "${#lines[@]}" -eq 21 ]
 }
