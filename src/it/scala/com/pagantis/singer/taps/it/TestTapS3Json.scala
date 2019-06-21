@@ -242,7 +242,7 @@ class TestTapS3Json
 
       "success to stream a long json file with correct framing" in {
         val completable =
-          new S3Source(testBucketMustExist, Some("long-multi-liner")).object_contents
+          new S3Source(testBucketMustExist, Some("long/long-multi-liner")).object_contents
             .withAttributes(minioSettings)
             .runWith(Sink.seq)
         completable.futureValue.size shouldBe 500

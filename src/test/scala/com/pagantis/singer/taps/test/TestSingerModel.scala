@@ -2,7 +2,7 @@ package com.pagantis.singer.taps.test
 
 import java.time.ZoneId
 
-import com.pagantis.singer.taps.{JsonPaths, JsonProtocol, SingerAdapter, TapS3JsonRecord}
+import com.pagantis.singer.taps.{JsonProtocol, SingerAdapter, TapS3JsonRecord}
 import org.scalatest._
 
 class TestSingerModel extends WordSpecLike with Matchers {
@@ -56,33 +56,9 @@ class TestSingerModel extends WordSpecLike with Matchers {
       tapRecordAsJson shouldBe """{"type":"RECORD","stream":"jsonpath-matches","time_extracted":"2019-04-23T12:00:00Z","record":{"path1":null,"path2":"match2"}}"""
 
     }
-    "generate json-path matches" in {
-      val singerAdapter = new SingerAdapter(
-        Some(new JsonPaths(
-          List("$.key1.sub-key")
-        )
-        )
-      )
-
-      singerAdapter.toSingerRecord(
-        """
-          | {
-          |   "key1": {
-          |     "sub-key": 34
-          |   },
-          |   "key2": false
-          | }
-        """.stripMargin) shouldBe TapS3JsonRecord(
-        time_extracted = None,
-        record = JsObject(
-          "$.key1.sub-key" -> JsString("34")
-        ).toJson
-      )
-
-    }
     "generate raw records" in {
 
-      val singerAdapter = new SingerAdapter(jsonPaths = None)
+      val singerAdapter = new SingerAdapter
       val inputJson =
         """
           | {
@@ -101,7 +77,7 @@ class TestSingerModel extends WordSpecLike with Matchers {
 
     }
     "ignore headers when printing records" in {
-      val singerAdapter = new SingerAdapter(jsonPaths = None, ignoreHeaders = true)
+      val singerAdapter = new SingerAdapter(ignoreHeaders = true)
       val inputJson =
         """
           | {

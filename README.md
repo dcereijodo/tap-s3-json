@@ -49,30 +49,16 @@ tap-s3-json --config application.conf
 # { "type": "RECORD", stream: "raw", "record": {"_id": "5cfcc672d3f4e41fdce82464", "isActive": true, "tags": ["culpa","magna","consectetur"], "customerInfo": {"id": 1,"company": "PETIGEMS"}}}
 ```
 
-### JsonPaths mode
-If a `json.paths` list is provided in the configuration, the tap will run in `jsonpaths` mode
-```hocon
-# application.conf
-tap {
-  bucket_name = "bucket-with-jsons"
-  s3_preffix = "sub-prefix" // optional
-  json {
-    paths = [
-      "$._id",
-      "$.tags[0]"
-      "$.customerInfo.company"
-    ]
-  }
-}
-```
-In `jsonpaths` mode only the queried JSON paths are extracted in the record
+### ~~JsonPaths mode~~
+This mode has been discontinued, as there are number of tools that can do a better job at munging the extracted
+JSON data. [`jq`](https://stedolan.github.io/jq/) is one of such tools that supports a full featured query language for
+streamline JSON data.
 ```bash
-tap-s3-json --config application.conf
+tap-s3-json --config application.conf | jq '{type: .type, stream: "jsonpath-matches", record: {"$._id": .["_id"], "$.tags[0]": .["tags[0]"], "$.customerInfo.company": .["customerInfo.company"]}}'
 # will output two lines
 # { "type": "RECORD", stream: "jsonpath-matches", "record": {"$._id": "5cfcc6725ed2ba0bf86a3715", "$.tags[0]": "proident", "$.customerInfo.company": "DIGIFAD"} }
 # { "type": "RECORD", stream: "jsonpath-matches", "record": {"$._id": "5cfcc6725ed2ba0bf86a3715", "$.tags[0]": "culpa", "$.customerInfo.company": "PETIGEMS"} }
 ```
-This mode is intended as a basic flattening feature for nested JSON.
 
 ## Configuration
 Yo can find examples and descriptions for all configurations supported by `tap-s3-json` in the [sample configuration file](src/main/resources/application.conf).
