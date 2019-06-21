@@ -92,7 +92,7 @@ The command uses defaults
 * Tap `bucket_name` :arrow_right: `pmt-events-datalake-storage-prod`
 * Tap `prefix` :arrow_right: `PMT_ORDER/ORDER_CREATED`
 * Tap `limit` :arrow_right: `20`
-* Tap `frame_length` :arrow_right: `8192`
+* Tap `frame_length` :arrow_right: `262144` (enough to support the maximum SNS message size)
 * Tap `worker_count` :arrow_right: `4`
 * HTTP `max-connections` :arrow_right: `32`
 * HTTP `max-open-requests` :arrow_right: `16`

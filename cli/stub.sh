@@ -44,6 +44,7 @@ parsed=(
     '-Dtap.bucket_name=pmt-events-datalake-storage-prod'
     '-Dtap.prefix=PMT_ORDER/ORDER_CREATED'
     '-Dtap.limit=20'
+    '-Dtap.frame_length=262144'
 )
 # and then we loop through the user arguments
 while [[ $# -gt 0 ]]; do
