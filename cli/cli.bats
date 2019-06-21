@@ -9,7 +9,7 @@ load test_helper
 }
 
 @test "error is printed when the user does not have access" {
-  run tap-s3-json
+  run tap-s3-json --profile ${BATS_AWS_PROFILE}
   [ "$status" -eq 1 ]
   echo $output | grep "Access Denied"
 }
@@ -27,6 +27,19 @@ load test_helper
       --region us-east-1 \
       --tap.bucket_name ryft-public-sample-data \
       --tap.prefix esRedditJson/
+  [ "$status" -eq 0 ]
+  [ "${#lines[@]}" -eq 21 ]
+}
+
+@test "extend tap parallelism" {
+  run \
+  tap-s3-json \
+    --profile ${BATS_AWS_PROFILE} \
+    --region us-east-1 \
+    --tap.worker_count 128 \
+    --akka.http.host-connection-pool.max-open-requests 128 \
+    --tap.bucket_name ryft-public-sample-data \
+    --tap.prefix esRedditJson/
   [ "$status" -eq 0 ]
   [ "${#lines[@]}" -eq 21 ]
 }
