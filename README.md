@@ -89,7 +89,6 @@ sbt package && sbt assembly && sbt make && sbt install
 The command uses defaults
 * Logback `LOG_LEVEL` :arrow_right: `ERROR`
 * Tap `ignore_headers` :arrow_right: `true`
-* Tap `json.paths` :arrow_right: `null` (raw mode)
 * Tap `bucket_name` :arrow_right: `pmt-events-datalake-storage-prod`
 * Tap `prefix` :arrow_right: `PMT_ORDER/ORDER_CREATED`
 * Tap `limit` :arrow_right: `20`
