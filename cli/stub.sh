@@ -1,5 +1,6 @@
 #!/bin/bash
 # https://coderwall.com/p/ssuaxa/how-to-make-a-jar-file-linux-executable
+
 MYSELF=`which "$0" 2>/dev/null`
 [ $? -gt 0 -a -f "$0" ] && MYSELF="./$0"
 java=java
@@ -40,10 +41,11 @@ LOG_LEVEL=${LOG_LEVEL:=ERROR}
 
 # By default we want to set the tap to ignore headers, so we add them to the argument list
 parsed=(
-    "-Dtap.ignore_headers=true" '-Dtap.json=""'
+    "-Dtap.ignore_headers=true"
     '-Dtap.bucket_name=pmt-events-datalake-storage-prod'
     '-Dtap.prefix=PMT_ORDER/ORDER_CREATED'
     '-Dtap.limit=20'
+    '-Dtap.frame_length=262144'
 )
 # and then we loop through the user arguments
 while [[ $# -gt 0 ]]; do
@@ -78,7 +80,11 @@ while [[ $# -gt 0 ]]; do
             shift 2
             ;;
         *)
-            option=${1##*-}; value=$2
+            option=${1##--}; value=$2
+            if [ $# -lt 2 ]; then
+              echo "Invalid argument $1: $2"
+              exit 1
+            fi
             parsed+=("-D$option=$value")
             shift 2
             ;;

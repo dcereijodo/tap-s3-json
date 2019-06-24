@@ -33,21 +33,17 @@ object SingerAdapter {
 
   def fromConfig: SingerAdapter = {
     val config = ConfigFactory.load().getConfig("tap")
-    new SingerAdapter(JsonPaths.fromConfig, config.getBoolean("ignore_headers"))
+    new SingerAdapter(config.getBoolean("ignore_headers"))
   }
 
 }
 
-class SingerAdapter(jsonPaths: Option[JsonPaths], ignoreHeaders: Boolean = false) {
+class SingerAdapter(ignoreHeaders: Boolean = false) {
   import spray.json._
   import JsonProtocol._
 
-  def toSingerRecord(line: String): TapS3JsonRecord = {
-    jsonPaths match {
-      case Some(paths) => TapS3JsonRecord(time_extracted = None, record = paths.asMap(line).toJson)
-      case None => TapS3JsonRecord(stream = "raw", time_extracted = None, record = line.parseJson)
-    }
-  }
+  def toSingerRecord(line: String): TapS3JsonRecord =
+    TapS3JsonRecord(stream = "raw", time_extracted = None, record = line.parseJson)
 
   def toJsonString(tapS3JsonRecord: TapS3JsonRecord): String = {
     if(ignoreHeaders) tapS3JsonRecord.record.compactPrint
