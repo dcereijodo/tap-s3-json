@@ -7,10 +7,7 @@ lazy val root = (project in file(".")).
       scalaVersion := "2.12.7"
     )),
     name := "tap-s3-json",
-    Defaults.itSettings,
-    // required for the assembly plugin
-    // https://github.com/sbt/sbt-assembly
-    mainClass in assembly := Some("com.pagantis.singer.taps.TapS3Json")
+    Defaults.itSettings
   )
 
 libraryDependencies ++= Seq(
