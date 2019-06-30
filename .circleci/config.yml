@@ -4,7 +4,7 @@ orbs:
   orb-tools: circleci/orb-tools@8.27.2
 
 jobs:
-  aws-cli:
+  cli-tests:
     executor: aws-cli/default
     steps:
       - aws-cli/install
@@ -61,7 +61,7 @@ jobs:
 
 workflows:
   version: 2
-  my-wf:
+  build-tap:
     jobs:
       - build
       - aws-cli:
