@@ -29,7 +29,7 @@ and `sub-prefix/object2.json`
   }
 ```
 
-Provided a configuration file (HOCON or JSON) such as below
+Provided a configuration file (both [HOCON](https://github.com/lightbend/config/blob/master/HOCON.md) and JSON are supported) such as below
 ```hocon
 # application.conf
 tap {
