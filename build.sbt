@@ -9,6 +9,8 @@ lazy val root = (project in file(".")).
     name := "tap-s3-json",
     Defaults.itSettings
   )
+  
+trapExit := false
 
 libraryDependencies ++= Seq(
   "io.spray" %% "spray-json" % "1.3.4",
