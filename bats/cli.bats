@@ -1,7 +1,6 @@
 #!/usr/bin/env bats
 
 load test_helper
-TAP_START_SCRIPT=target/universal/stage/bin/tap-s3-json
 
 @test "error is printed when no profile is provided" {
   run $TAP_START_SCRIPT --profile "DOES_NOT_EXIST"
