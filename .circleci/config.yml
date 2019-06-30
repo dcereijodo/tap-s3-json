@@ -64,6 +64,6 @@ workflows:
   build-tap:
     jobs:
       - build
-      - aws-cli:
+      - cli-tests:
           requires:
             - build
