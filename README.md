@@ -1,8 +1,5 @@
-# TapS3Json
-A [Singer.io](https://github.com/singer-io/getting-started) tap for extracting data from Json files on S3. The tap has
-two modes, `raw` and `jsonpaths`. In the `raw` mode, given an S3 bucket and optionally an S3 prefix, it will output the
-contents of the bucket to a singer stream called `raw`. If a set of `jsonpath`s is provided in the configuration,
-the tap will output the first match for each key if any to an singer stream called `jsonpath-matches`.
+# TapS3Json [![CircleCI](https://circleci.com/gh/dcereijodo/tap-s3-json.svg?style=svg)](https://circleci.com/gh/dcereijodo/tap-s3-json)
+A [Singer.io](https://github.com/singer-io/getting-started) tap for extracting data from Json files on S3. Given an S3 bucket and optionally an S3 prefix, it will output the contents of the bucket to a singer stream called `raw`.
 
 ## Example
 Given an S3 bucket `bucket-with-jsons` with two S3 objects
@@ -32,8 +29,7 @@ and `sub-prefix/object2.json`
   }
 ```
 
-### Raw mode
-If no `paths` key is provided in the configuration the tap will run in `raw` mode
+Provided a configuration file (HOCON or JSON) such as below
 ```hocon
 # application.conf
 tap {
@@ -41,7 +37,7 @@ tap {
   s3_preffix = "sub-prefix" // optional
 }
 ```
-In `raw` mode the complete JSON is extracted in the record
+The complete JSON is extracted in the record
 ```bash
 tap-s3-json --config application.conf
 # will output two lines
@@ -61,7 +57,7 @@ tap-s3-json --config application.conf | jq '{type: .type, stream: "jsonpath-matc
 ```
 
 ## Configuration
-Yo can find examples and descriptions for all configurations supported by `tap-s3-json` in the [sample configuration file](src/main/resources/application.conf).
+You can find examples and descriptions for all configurations supported by `tap-s3-json` in the [sample configuration file](src/main/resources/application.conf).
 All this properties can be overridden when using the tap from the command line by providing appropriate arguments. Check the `tap-s3-json help` for more information.
 
 The util uses `logback` for logging. The default logging configuration can be found in the [`logback.xml` file](src/main/resources/logback.xml).
