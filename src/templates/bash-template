@@ -197,7 +197,7 @@ process_args () {
   while [[ $# -gt 0 ]]; do
     case "$1" in
              --) shift && no_more_snp_opts=1 && break ;;
-       -h|-help) usage; exit 1 ;;
+  -h|-help|help) usage; exit 1 ;;
     -v|-verbose) verbose=1 && shift ;;
       -d|-debug) debug=1 && shift ;;
 
