@@ -1,3 +1,4 @@
+enablePlugins(JavaAppPackaging)
 lazy val root = (project in file(".")).
   configs(IntegrationTest)
   .settings(
@@ -6,11 +7,10 @@ lazy val root = (project in file(".")).
       scalaVersion := "2.12.7"
     )),
     name := "tap-s3-json",
-    Defaults.itSettings,
-    // required for the assembly plugin
-    // https://github.com/sbt/sbt-assembly
-    mainClass in assembly := Some("com.pagantis.singer.taps.TapS3Json")
+    Defaults.itSettings
   )
+  
+trapExit := false
 
 libraryDependencies ++= Seq(
   "io.spray" %% "spray-json" % "1.3.4",
@@ -23,13 +23,3 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-stream-testkit" % "2.5.21"% "it,test",
   "org.scalatest" %% "scalatest" % "3.0.5" % "it,test"
 )
-
-lazy val make = inputKey[Unit]("Create a binary with the tap as a command line util")
-make := {
-  s"cat cli/stub.sh target/scala-2.12/tap-s3-json-assembly-${version.value}.jar" #> file("tap-s3-json") !;
-  "chmod +x tap-s3-json" !
-}
-lazy val install = inputKey[Unit]("Install tap as a command line util")
-install := {
-  "mv tap-s3-json /usr/local/bin" !
-}

@@ -70,21 +70,19 @@ The util uses `logback` for logging. The default logging configuration can be fo
 This is an [SBT](https://www.scala-sbt.org/) project. If you don't have sbt installed, do so by running `brew install sbt`
 on Mac. Then you can compile and package the project with
 ```bash
-sbt package && sbt assembly
+sbt ";compile;universal:packageBin"
 ```
-And next run the tap like
+And run it with
 ```bash
 sbt run
 ```
-or if you prefer using bare java
-```bash
-java -jar target/scala-2.12/tap-s3-json-assembly-0.1-SNAPSHOT.jar [-Dconfig.file=application.conf]
-```
 
 ## CLI
-In the `cli` folder a `stub.sh` wrapps the call to the tap with a set of defaults and options aliases so a friendly interface can be exposed to the user in the form of a CLI util. If you want to install this wrapped version of the tap as command on your system (tried on Mac)
+The `universal:packageBin` sbt target from the previous section will generate zip file in `target/universal` with a packaged version of the tap. This wrapps the call to the tap with a set of defaults and options aliases so a friendly interface can be exposed to the user in the form of a CLI util.
+For running the packaged tap (Java 8 required)
 ```bash
-sbt package && sbt assembly && sbt make && sbt install
+unzip target/universal/tap-s3-json-0.1-SNAPSHOT.zip
+tap-s3-json-0.1-SNAPSHOT/bin/tap-s3-json help
 ```
 The command uses defaults
 * Logback `LOG_LEVEL` :arrow_right: `ERROR`
@@ -100,7 +98,7 @@ The command uses defaults
 Though all these can be overwritten using appropriate arguments to `tap-s3-json`. For more information check the
 help with `tap-s3-json help`.
 
-`cli.bats` defines a few [bats tests](https://github.com/sstephenson/bats) that check some CLI basic functionallity after installation.
+`bats/cli.bats` defines a few [bats tests](https://github.com/sstephenson/bats) that check some CLI basic functionallity after installation.
 
 ## Date-based tapping
 One can tap using an environment variable `PARTITION_VALUE` provided the partitioning configuration is defined
