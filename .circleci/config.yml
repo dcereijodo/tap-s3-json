@@ -1,0 +1,69 @@
+version: 2.1
+orbs:
+  aws-cli: circleci/aws-cli@0.1.1
+  orb-tools: circleci/orb-tools@8.27.2
+
+jobs:
+  aws-cli:
+    executor: aws-cli/default
+    steps:
+      - aws-cli/install
+      - aws-cli/configure:
+          aws-region: eu-west-1
+          profile-name: example
+      - attach_workspace:
+        # Must be absolute path or relative path from working_directory
+          at: /tmp/workspace
+      - orb-tools/install-bats
+      - run:
+          name: Install Java 8
+          command: sudo apt-get install openjdk-8-jdk
+      - checkout
+      - run:
+          name: BATS Test
+          command: |
+            unzip /tmp/workspace/universal/tap-s3-json-0.1-SNAPSHOT.zip
+            TAP_START_SCRIPT=tap-s3-json-0.1-SNAPSHOT/bin/tap-s3-json bats bats/cli.bats
+  build:
+    docker:
+      - image: openjdk:8
+    environment:
+      SBT_VERSION: 0.13.17
+    steps:
+      - run: echo 'export ARTIFACT_BUILD=$CIRCLE_PROJECT_REPONAME-$CIRCLE_BUILD_NUM.zip' >> $BASH_ENV
+      - run:
+          name: Get sbt binary
+          command: |
+            apt update && apt install -y curl
+            curl -L -o sbt-$SBT_VERSION.deb https://dl.bintray.com/sbt/debian/sbt-$SBT_VERSION.deb
+            dpkg -i sbt-$SBT_VERSION.deb
+            rm sbt-$SBT_VERSION.deb
+            apt-get clean && apt-get autoclean
+      - checkout
+      - restore_cache:
+          key: sbt-cache
+      - run:
+          name: SBT Test
+          command: sbt test
+      - run:
+          name: SBT Package
+          command: sbt universal:packageBin
+      - save_cache:
+          key: sbt-cache
+          paths:
+            - "~/.ivy2/cache"
+            - "~/.sbt"
+            - "~/.m2"
+      - persist_to_workspace:
+          root: target
+          paths:
+            - universal
+
+workflows:
+  version: 2
+  my-wf:
+    jobs:
+      - build
+      - aws-cli:
+          requires:
+            - build
