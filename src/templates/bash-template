@@ -216,8 +216,12 @@ process_args () {
 
      --unbounded) addJava "-Dtap.limit=0" && shift ;;
 
+     --filter) addJava "-Dtap.filtered_with=$2" && shift 2 ;;
+
      --profile) AWS_PROFILE=$2 && shift 2 ;;
+
      --region) AWS_REGION=$2 && shift 2 ;;
+
      # when a --date parameter is provided assume 'unbounded' mode
      --date) addJava "-Dtap.partitioning.value=$2" && addJava "-Dtap.limit=0" && shift 2;;
 
@@ -360,6 +364,7 @@ Optional arguments: $script_name [options]
   --date: Specifies a date to be tapped. When specified, mode will be 'unbounded'.
   --profile: AWS profile. Overrides environment variable AWS_PROFILE
   --region: AWS region. Overrides environment variable AWS_REGION
+  --filter: Regular expression to be pushed to after te bucket list stage
 
 In the case of duplicated or conflicting options, basically the order above
 shows precedence: JAVA_OPTS lowest, command line options highest.

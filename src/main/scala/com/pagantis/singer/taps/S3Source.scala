@@ -7,7 +7,7 @@ import akka.stream.scaladsl.{Balance, Flow, GraphDSL, JsonFraming, Merge, Source
 import akka.util.ByteString
 import com.typesafe.config.ConfigFactory
 
-object S3Source extends PartitioningUtils {
+object S3Source extends ObjectKeyUtils {
 
   def fromConfig: S3Source = {
     val config = ConfigFactory.load().getConfig("tap")
@@ -19,6 +19,7 @@ object S3Source extends PartitioningUtils {
         config.as[Option[String]]("partitioning.key"),
         config.as[Option[String]]("partitioning.value")),
       config.as[Option[Long]]("limit"),
+      config.as[Option[String]]("filtered_with"),
       config.as[Int]("frame_length"),
       config.as[Int]("worker_count")
     )
@@ -31,14 +32,23 @@ class S3Source(
                 s3Prefix: Option[String] =  None,
                 partitioningSubPath: Option[String] = None,
                 limit: Option[Long] = None,
+                filteredWith: Option[String] = None,
                 maximumFrameLength: Int = 1024*4,
                 workerCount: Int = 10
               )
-extends PartitioningUtils
+extends ObjectKeyUtils
 {
 
   def object_keys: Source[String, NotUsed] =
-    S3.listBucket(bucketName, buildS3Prefix(s3Prefix, partitioningSubPath)).map(_.key)
+    filteredWith match {
+      case Some(filteringExpression) =>
+        S3.listBucket(bucketName, buildS3Prefix(s3Prefix, partitioningSubPath))
+          .map(_.key)
+          .filter(filterKey(_,filteringExpression))
+      case None =>
+        S3.listBucket(bucketName, buildS3Prefix(s3Prefix, partitioningSubPath)).map(_.key)
+    }
+
 
   def object_contents: Source[String, NotUsed] = {
 

@@ -24,6 +24,23 @@ jobs:
           command: |
             unzip /tmp/workspace/universal/tap-s3-json-0.1-SNAPSHOT.zip
             TAP_START_SCRIPT=tap-s3-json-0.1-SNAPSHOT/bin/tap-s3-json bats bats/cli.bats
+  it-tests:
+    docker:
+      - image: openjdk:8
+      - run:
+          name: Get sbt binary
+          command: |
+            apt update && apt install -y curl
+            curl -L -o sbt-$SBT_VERSION.deb https://dl.bintray.com/sbt/debian/sbt-$SBT_VERSION.deb
+            dpkg -i sbt-$SBT_VERSION.deb
+            rm sbt-$SBT_VERSION.deb
+            apt-get clean && apt-get autoclean
+      - checkout
+      - restore_cache:
+          key: sbt-cache
+            - run:
+          name: SBT Test
+          command: sbt it:test
   build:
     docker:
       - image: openjdk:8
@@ -65,5 +82,8 @@ workflows:
     jobs:
       - build
       - cli-tests:
+          requires:
+            - build
+      - it-tests:
           requires:
             - build

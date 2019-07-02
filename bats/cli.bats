@@ -44,3 +44,16 @@ load test_helper
   [ "$status" -eq 0 ]
   [ "${#lines[@]}" -eq 20 ]
 }
+
+@test "keys are filtered using a regular expression" {
+  run \
+    $TAP_START_SCRIPT \
+    --profile ${BATS_AWS_PROFILE} \
+    --region us-east-1 \
+    --tap.bucket_name ryft-public-sample-data \
+    --tap.prefix esRedditJson \
+    --filter '.*esRedditJson6[12]' \
+    --unbounded
+  [ "$status" -eq 0 ]
+  [ "${#lines[@]}" -eq 72000 ]
+}
