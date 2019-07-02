@@ -27,6 +27,7 @@ jobs:
   it-tests:
     docker:
       - image: openjdk:8
+    steps:
       - run:
           name: Get sbt binary
           command: |
@@ -38,7 +39,7 @@ jobs:
       - checkout
       - restore_cache:
           key: sbt-cache
-            - run:
+      - run:
           name: SBT Test
           command: sbt it:test
   build:
