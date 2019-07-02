@@ -138,12 +138,26 @@ class TestTapS3Json
           }
         )
 
+      // put partitioned
+      val putPartitioned = testBucketCreated flatMap( _ => {
+            for {
+              _ <- uploadString(singleLineBody, "partitioned/date=2019-01-01/line1.json")
+              _ <- uploadString(singleLineBody, "partitioned/date=2019-01-01/line4.json")
+              _ <- uploadString(singleLineBody, "partitioned/date=2019-02-01/line3.json")
+              _ <- uploadString(singleLineBody, "partitioned/date=2019-02-01/line4.json")
+              _ <- uploadString(singleLineBody, "partitioned/date=2017-02-01/line5.json")
+              _ <- uploadString(singleLineBody, "partitioned/date=2017-02-01/line6.json")
+            } yield Done
+          }
+        )
+
       val fixtureReady = for {
         _ <- testBucketCreated
         _ <- testBucketDestroyed
         _ <- putSingleLine
         _ <- putMultiLineBody
         _ <- putNestedKeys
+        _ <- putPartitioned
       } yield Done
 
       Await.ready(fixtureReady, Duration.Inf)
@@ -254,6 +268,39 @@ class TestTapS3Json
             .withAttributes(minioSettings)
             .runWith(Sink.seq)
         completable.futureValue.size shouldBe 2
+      }
+
+      "stream a single partition" in {
+        val completable =
+          new S3Source(testBucketMustExist, s3Prefix = Some("partitioned"), partitioningSubPath = Some("date=2019-02-01")).object_contents
+            .withAttributes(minioSettings)
+            .runWith(Sink.seq)
+        completable.futureValue.size shouldBe 2
+      }
+
+      "stream with filtering" in {
+        val completable =
+          new S3Source(
+            testBucketMustExist,
+            s3Prefix = Some("partitioned"),
+            filteredWith = Some("partitioned/date=201[97]-02-[0-9]{2}/.*")
+          ).object_contents
+            .withAttributes(minioSettings)
+            .runWith(Sink.seq)
+        completable.futureValue.size shouldBe 4
+      }
+
+      "stream a single partition with object filtering" in {
+        val completable =
+          new S3Source(
+            testBucketMustExist,
+            s3Prefix = Some("partitioned"),
+            partitioningSubPath = Some("date=2019-02-01"),
+            filteredWith = Some(".*line4.json")
+          ).object_contents
+            .withAttributes(minioSettings)
+            .runWith(Sink.seq)
+        completable.futureValue.size shouldBe 1
       }
 
     }
