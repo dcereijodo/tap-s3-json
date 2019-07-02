@@ -27,6 +27,8 @@ jobs:
   it-tests:
     docker:
       - image: openjdk:8
+    environment:
+      SBT_VERSION: 0.13.17
     steps:
       - run:
           name: Get sbt binary
