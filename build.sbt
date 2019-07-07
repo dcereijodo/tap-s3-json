@@ -1,4 +1,7 @@
+import ReleaseTransformations._
+
 enablePlugins(JavaAppPackaging)
+
 lazy val root = (project in file(".")).
   configs(IntegrationTest)
   .settings(
@@ -22,4 +25,16 @@ libraryDependencies ++= Seq(
   "com.typesafe.akka" %% "akka-testkit" % "2.5.21" % "it,test",
   "com.typesafe.akka" %% "akka-stream-testkit" % "2.5.21"% "it,test",
   "org.scalatest" %% "scalatest" % "3.0.5" % "it,test"
+)
+
+bashScriptExtraDefines += s"""APP_VERSION=${version.value}"""
+
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,              // : ReleaseStep
+  inquireVersions,                        // : ReleaseStep
+  runClean,                               // : ReleaseStep
+  runTest,                                // : ReleaseStep
+  setReleaseVersion,                      // : ReleaseStep
+  tagRelease,                             // : ReleaseStep
+  setNextVersion                          // : ReleaseStep
 )

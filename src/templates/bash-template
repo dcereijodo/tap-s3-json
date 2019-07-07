@@ -198,6 +198,7 @@ process_args () {
     case "$1" in
              --) shift && no_more_snp_opts=1 && break ;;
   -h|-help|help) usage; exit 1 ;;
+    -version|--version|version) echo "$APP_VERSION" ; exit 0 ;;
     -v|-verbose) verbose=1 && shift ;;
       -d|-debug) debug=1 && shift ;;
 
