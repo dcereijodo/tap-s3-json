@@ -22,8 +22,8 @@ jobs:
       - run:
           name: BATS Test
           command: |
-            unzip /tmp/workspace/universal/tap-s3-json-0.1-SNAPSHOT.zip
-            TAP_START_SCRIPT=tap-s3-json-0.1-SNAPSHOT/bin/tap-s3-json bats bats/cli.bats
+            unzip /tmp/workspace/bundle/tap-s3-json-LATEST.zip
+            TAP_START_SCRIPT=tap-s3-json-LATEST/bin/tap-s3-json bats bats/cli.bats
   it-tests:
     docker:
       - image: openjdk:8
@@ -74,10 +74,16 @@ jobs:
             - "~/.ivy2/cache"
             - "~/.sbt"
             - "~/.m2"
+      - run:
+          name: Collect workspace
+          command: |
+            BUNDLE_VERSION=$(sbt version | tail -1 | cut -f 2 -d ' ')
+            mkdir -p workspace
+            cp target/universal/tap-s3-json-$BUNDLE_VERSION.zip workspace/bundle/tap-s3-json-LATEST.zip
       - persist_to_workspace:
-          root: target
+          root: workspace
           paths:
-            - universal
+            - bundle
 
 workflows:
   version: 2
