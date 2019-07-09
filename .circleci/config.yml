@@ -77,8 +77,8 @@ jobs:
       - run:
           name: Collect workspace
           command: |
-            BUNDLE_VERSION=$(sbt version | tail -1 | cut -f 2 -d ' ')
-            mkdir -p workspace
+            BUNDLE_VERSION=$(sbt version -J-Dsbt.log.noformat=true | tail -1 | cut -f 2 -d ' ')
+            mkdir -p workspace/bundle
             cp target/universal/tap-s3-json-$BUNDLE_VERSION.zip workspace/bundle/tap-s3-json-LATEST.zip
       - persist_to_workspace:
           root: workspace
