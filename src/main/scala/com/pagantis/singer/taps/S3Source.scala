@@ -3,7 +3,8 @@ package com.pagantis.singer.taps
 import akka.NotUsed
 import akka.stream.FlowShape
 import akka.stream.alpakka.s3.scaladsl.S3
-import akka.stream.scaladsl.{Balance, Flow, GraphDSL, JsonFraming, Merge, Source}
+import akka.stream.impl.JsonFramingStage
+import akka.stream.scaladsl.{Balance, Flow, GraphDSL, Merge, Source}
 import akka.util.ByteString
 import com.typesafe.config.ConfigFactory
 
@@ -50,27 +51,28 @@ extends ObjectKeyUtils
     }
 
 
-  def object_contents: Source[String, NotUsed] = {
+  def object_contents: Source[(String, String), NotUsed] = {
 
     import GraphDSL.Implicits._
 
     val objectsToProcess = object_keys
-    val keyFlow: Flow[String, ByteString, NotUsed] = Flow[String].map(
+    val keyFlow: Flow[String, (ByteString, String), NotUsed] = Flow[String].map(
+      key =>
         S3
-          .download(bucketName, _)
+          .download(bucketName, key)
           .collect { // take successful downloads
             case Some(successfulDownloadAsASource) =>
 
               // first element in the tuple contains the actual source, second element is metadata
-              successfulDownloadAsASource._1
+              successfulDownloadAsASource._1.map((_,key))
           }
-          .flatMapConcat(p => p.via(JsonFraming.objectScanner(maximumFrameLength)))
+          .flatMapConcat(p => p.via(JsonFramingStage.objectScanner(maximumFrameLength)))
       ).flatMapConcat(p => p)
 
-    val parallelDownload: Flow[String, ByteString, NotUsed] = Flow.fromGraph(GraphDSL.create() { implicit builder =>
+    val parallelDownload: Flow[String, (ByteString, String), NotUsed] = Flow.fromGraph(GraphDSL.create() { implicit builder =>
 
       val balancer = builder.add(Balance[String](workerCount, waitForAllDownstreams = true))
-      val merge = builder.add(Merge[ByteString](workerCount))
+      val merge = builder.add(Merge[(ByteString, String)](workerCount))
 
       for (_ <- 1 to workerCount) {
         // for each worker, add an edge from the balancer to the worker, then wire
@@ -84,7 +86,7 @@ extends ObjectKeyUtils
     val contents =
       objectsToProcess
         .via(parallelDownload)
-        .map(_.utf8String)
+        .map{case (contents, key) => (contents.utf8String, key)}
 
     limit match {
       case Some(max) if max > 0 => contents take max
