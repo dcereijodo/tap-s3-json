@@ -90,5 +90,20 @@ class TestSingerModel extends WordSpecLike with Matchers {
       singerAdapter.toJsonString(singerAdapter.toSingerRecord(inputJson)) shouldBe inputJson
 
     }
+    "can output a 'key' field when an S3 key is provided" in {
+      val singerAdapter = new SingerAdapter
+      val inputJson = """{"some":"data"}"""
+      singerAdapter.toJsonString(singerAdapter.toSingerRecord(inputJson, objectKey = Some("somekey"))) shouldBe """{"type":"RECORD","stream":"raw","key":"somekey","record":{"some":"data"}}"""
+    }
+    "can output a 'version' field when an S3 version" in {
+      val singerAdapter = new SingerAdapter
+      val inputJson = """{"some":"data"}"""
+      singerAdapter.toJsonString(singerAdapter.toSingerRecord(inputJson, version = Some("2"))) shouldBe """{"type":"RECORD","stream":"raw","version":"2","record":{"some":"data"}}"""
+    }
+    "can output a 'last_modified_at' field when the last modification timestamp is provided" in {
+      val singerAdapter = new SingerAdapter
+      val inputJson = """{"some":"data"}"""
+      singerAdapter.toJsonString(singerAdapter.toSingerRecord(inputJson, lastModifiedAt = Some("2010-01-01T00:00:00"))) shouldBe """{"type":"RECORD","stream":"raw","last_modified_at":"2010-01-01T00:00:00","record":{"some":"data"}}"""
+    }
   }
 }

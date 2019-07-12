@@ -3,10 +3,12 @@ package com.pagantis.singer.taps
 import akka.NotUsed
 import akka.stream.FlowShape
 import akka.stream.alpakka.s3.scaladsl.S3
-import akka.stream.impl.JsonFramingStage
+import akka.stream.impl.JsonFramingWithContext
 import akka.stream.scaladsl.{Balance, Flow, GraphDSL, Merge, Source}
 import akka.util.ByteString
 import com.typesafe.config.ConfigFactory
+
+case class ObjectMetadata(key: String, version: Option[String], lastModifiedAt: String)
 
 object S3Source extends ObjectKeyUtils {
 
@@ -51,12 +53,12 @@ extends ObjectKeyUtils
     }
 
 
-  def object_contents: Source[(String, String), NotUsed] = {
+  def object_contents: Source[(String, ObjectMetadata), NotUsed] = {
 
     import GraphDSL.Implicits._
 
     val objectsToProcess = object_keys
-    val keyFlow: Flow[String, (ByteString, String), NotUsed] = Flow[String].map(
+    val keyFlow: Flow[String, (ByteString, ObjectMetadata), NotUsed] = Flow[String].map(
       key =>
         S3
           .download(bucketName, key)
@@ -64,15 +66,20 @@ extends ObjectKeyUtils
             case Some(successfulDownloadAsASource) =>
 
               // first element in the tuple contains the actual source, second element is metadata
-              successfulDownloadAsASource._1.map((_,key))
+              val metadata = ObjectMetadata(
+                key,
+                successfulDownloadAsASource._2.versionId,
+                successfulDownloadAsASource._2.lastModified.toIsoDateTimeString
+              )
+              successfulDownloadAsASource._1.map((_,metadata))
           }
-          .flatMapConcat(p => p.via(JsonFramingStage.objectScanner(maximumFrameLength)))
+          .flatMapConcat(p => p.via(JsonFramingWithContext.objectScanner(maximumFrameLength)))
       ).flatMapConcat(p => p)
 
-    val parallelDownload: Flow[String, (ByteString, String), NotUsed] = Flow.fromGraph(GraphDSL.create() { implicit builder =>
+    val parallelDownload: Flow[String, (ByteString, ObjectMetadata), NotUsed] = Flow.fromGraph(GraphDSL.create() { implicit builder =>
 
       val balancer = builder.add(Balance[String](workerCount, waitForAllDownstreams = true))
-      val merge = builder.add(Merge[(ByteString, String)](workerCount))
+      val merge = builder.add(Merge[(ByteString, ObjectMetadata)](workerCount))
 
       for (_ <- 1 to workerCount) {
         // for each worker, add an edge from the balancer to the worker, then wire

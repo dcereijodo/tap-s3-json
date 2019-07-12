@@ -8,7 +8,7 @@ import akka.util.ByteString
 
 import scala.util.control.NonFatal
 
-class JsonFramingStage[Ctx](maximumObjectLength: Int) extends GraphStage[FlowShape[(ByteString, Ctx), (ByteString, Ctx)]] {
+class JsonFramingWithContext[Ctx](maximumObjectLength: Int) extends GraphStage[FlowShape[(ByteString, Ctx), (ByteString, Ctx)]] {
 
   val in = Inlet[(ByteString, Ctx)]("JsonFramingWithContext.in")
   val out = Outlet[(ByteString, Ctx)]("JsonFramingWithContext.out")
@@ -56,10 +56,10 @@ class JsonFramingStage[Ctx](maximumObjectLength: Int) extends GraphStage[FlowSha
 
 }
 
-object JsonFramingStage {
+object JsonFramingWithContext {
   def objectScanner[Ctx](maximumObjectLength: Int): Flow[(ByteString,Ctx), (ByteString,Ctx), NotUsed] = {
     Flow[(ByteString, Ctx)].via(
-      new JsonFramingStage[Ctx](maximumObjectLength)
+      new JsonFramingWithContext[Ctx](maximumObjectLength)
     )
   }
 }
