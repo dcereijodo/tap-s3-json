@@ -22,8 +22,29 @@ jobs:
       - run:
           name: BATS Test
           command: |
-            unzip /tmp/workspace/universal/tap-s3-json-0.1-SNAPSHOT.zip
-            TAP_START_SCRIPT=tap-s3-json-0.1-SNAPSHOT/bin/tap-s3-json bats bats/cli.bats
+            VERSION=$(cat /tmp/workspace/exchange/VERSION)
+            unzip /tmp/workspace/bundle/tap-s3-json-$VERSION.zip
+            TAP_START_SCRIPT=tap-s3-json-$VERSION/bin/tap-s3-json bats bats/cli.bats
+  it-tests:
+    docker:
+      - image: openjdk:8
+    environment:
+      SBT_VERSION: 0.13.17
+    steps:
+      - run:
+          name: Get sbt binary
+          command: |
+            apt update && apt install -y curl
+            curl -L -o sbt-$SBT_VERSION.deb https://dl.bintray.com/sbt/debian/sbt-$SBT_VERSION.deb
+            dpkg -i sbt-$SBT_VERSION.deb
+            rm sbt-$SBT_VERSION.deb
+            apt-get clean && apt-get autoclean
+      - checkout
+      - restore_cache:
+          key: sbt-cache
+      - run:
+          name: SBT Test
+          command: sbt it:test
   build:
     docker:
       - image: openjdk:8
@@ -54,10 +75,31 @@ jobs:
             - "~/.ivy2/cache"
             - "~/.sbt"
             - "~/.m2"
+      - run:
+          name: Collect workspace
+          command: |
+            BUNDLE_VERSION=$(sbt version -J-Dsbt.log.noformat=true | tail -1 | cut -f 2 -d ' ')
+            mkdir -p workspace/bundle
+            mkdir -p workspace/exchange
+            cp target/universal/tap-s3-json-$BUNDLE_VERSION.zip workspace/bundle/tap-s3-json-$BUNDLE_VERSION.zip
+            echo "$BUNDLE_VERSION" > workspace/exchange/VERSION
       - persist_to_workspace:
-          root: target
+          root: workspace
           paths:
-            - universal
+            - bundle
+            - exchange
+  publish-github-release:
+    docker:
+      - image: circleci/golang:1.8
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: "Publish Release on GitHub"
+          command: |
+            go get github.com/tcnksm/ghr
+            VERSION=$(cat /tmp/workspace/exchange/VERSION)
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -delete ${VERSION} /tmp/workspace/bundle
 
 workflows:
   version: 2
@@ -67,3 +109,16 @@ workflows:
       - cli-tests:
           requires:
             - build
+      - it-tests:
+          requires:
+            - build
+      - publish-github-release:
+          context: github_api
+          requires:
+            - cli-tests
+            - it-tests
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v\d+\.\d+\.\d+$/

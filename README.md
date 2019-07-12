@@ -41,9 +41,11 @@ The complete JSON is extracted in the record
 ```bash
 tap-s3-json --config application.conf
 # will output two lines
-# { "type": "RECORD", stream: "raw", "record": {"_id": "5cfcc6725ed2ba0bf86a3715", "isActive": false, "tags": ["proident","officia","aliquip"], "customerInfo": {"id": 0,"company": "DIGIFAD"}}}
-# { "type": "RECORD", stream: "raw", "record": {"_id": "5cfcc672d3f4e41fdce82464", "isActive": true, "tags": ["culpa","magna","consectetur"], "customerInfo": {"id": 1,"company": "PETIGEMS"}}}
+# { "type": "RECORD", "stream": "raw", "key": "sub-prefix/object1.json", "version": "XXX", "last_modified_at": "2019-03-18T12:18:04", "record": {"_id": "5cfcc6725ed2ba0bf86a3715", "isActive": false, "tags": ["proident","officia","aliquip"], "customerInfo": {"id": 0,"company": "DIGIFAD"}}}
+# { "type": "RECORD", "stream": "raw", "key": "sub-prefix/object2.json", "version": "XXX", "last_modified_at": "2019-04-18T12:18:04", "record": {"_id": "5cfcc672d3f4e41fdce82464", "isActive": true, "tags": ["culpa","magna","consectetur"], "customerInfo": {"id": 1,"company": "PETIGEMS"}}}
 ```
+
+Aditional fields `version` and `last_modified_at` are returned by the [S3 API](https://docs.aws.amazon.com/AmazonS3/latest/API/RESTObjectGET.html).
 
 ### ~~JsonPaths mode~~
 This mode has been discontinued, as there are number of tools that can do a better job at munging the extracted
