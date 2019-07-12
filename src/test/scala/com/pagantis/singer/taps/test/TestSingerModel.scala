@@ -23,7 +23,7 @@ class TestSingerModel extends WordSpecLike with Matchers {
       )
       val tapRecordAsJson = tapRecord.toJson.compactPrint
 
-      tapRecordAsJson shouldBe """{"type":"RECORD","stream":"jsonpath-matches","time_extracted":"2019-04-23T12:00:00Z","record":{"path1":"match1","path2":"match2"}}"""
+      tapRecordAsJson shouldBe """{"type":"RECORD","stream":"raw","time_extracted":"2019-04-23T12:00:00Z","record":{"path1":"match1","path2":"match2"}}"""
 
     }
     "serialize no match to Singer Specification" in {
@@ -36,7 +36,7 @@ class TestSingerModel extends WordSpecLike with Matchers {
 
       //noinspection ScalaUnnecessaryParentheses
       tapRecordAsJson shouldBe(
-        """{"type":"RECORD","stream":"jsonpath-matches","time_extracted":"2019-04-23T12:00:00Z","record":{}}"""
+        """{"type":"RECORD","stream":"raw","time_extracted":"2019-04-23T12:00:00Z","record":{}}"""
         )
 
     }
@@ -53,7 +53,7 @@ class TestSingerModel extends WordSpecLike with Matchers {
       import spray.json._
       val tapRecordAsJson = tapRecord.toJson.compactPrint
 
-      tapRecordAsJson shouldBe """{"type":"RECORD","stream":"jsonpath-matches","time_extracted":"2019-04-23T12:00:00Z","record":{"path1":null,"path2":"match2"}}"""
+      tapRecordAsJson shouldBe """{"type":"RECORD","stream":"raw","time_extracted":"2019-04-23T12:00:00Z","record":{"path1":null,"path2":"match2"}}"""
 
     }
     "generate raw records" in {
@@ -89,6 +89,21 @@ class TestSingerModel extends WordSpecLike with Matchers {
         """.stripMargin.parseJson.compactPrint
       singerAdapter.toJsonString(singerAdapter.toSingerRecord(inputJson)) shouldBe inputJson
 
+    }
+    "can output a 'key' field when an S3 key is provided" in {
+      val singerAdapter = new SingerAdapter
+      val inputJson = """{"some":"data"}"""
+      singerAdapter.toJsonString(singerAdapter.toSingerRecord(inputJson, objectKey = Some("somekey"))) shouldBe """{"type":"RECORD","stream":"raw","key":"somekey","record":{"some":"data"}}"""
+    }
+    "can output a 'version' field when an S3 version" in {
+      val singerAdapter = new SingerAdapter
+      val inputJson = """{"some":"data"}"""
+      singerAdapter.toJsonString(singerAdapter.toSingerRecord(inputJson, version = Some("2"))) shouldBe """{"type":"RECORD","stream":"raw","version":"2","record":{"some":"data"}}"""
+    }
+    "can output a 'last_modified_at' field when the last modification timestamp is provided" in {
+      val singerAdapter = new SingerAdapter
+      val inputJson = """{"some":"data"}"""
+      singerAdapter.toJsonString(singerAdapter.toSingerRecord(inputJson, lastModifiedAt = Some("2010-01-01T00:00:00"))) shouldBe """{"type":"RECORD","stream":"raw","last_modified_at":"2010-01-01T00:00:00","record":{"some":"data"}}"""
     }
   }
 }

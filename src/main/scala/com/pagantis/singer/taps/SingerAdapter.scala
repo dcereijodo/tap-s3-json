@@ -12,8 +12,11 @@ trait SingerMessage {
 
 case class TapS3JsonRecord(
                             `type`: String = "RECORD",
-                            stream: String =  "jsonpath-matches",
+                            stream: String =  "raw",
                             time_extracted: Option[ZonedDateTime],
+                            key: Option[String] = None,
+                            version: Option[String] = None,
+                            last_modified_at: Option[String] = None,
                             record: JsValue
                           )
 
@@ -26,7 +29,7 @@ object JsonProtocol extends DefaultJsonProtocol {
     //noinspection NotImplementedCode
     override def read(json: JsValue): ZonedDateTime = ??? //TODO: we won't read dates in the stream for now
   }
-  implicit val recordSerde: RootJsonFormat[TapS3JsonRecord] = jsonFormat4(TapS3JsonRecord)
+  implicit val recordSerde: RootJsonFormat[TapS3JsonRecord] = jsonFormat7(TapS3JsonRecord)
 }
 
 object SingerAdapter {
@@ -42,8 +45,8 @@ class SingerAdapter(ignoreHeaders: Boolean = false) {
   import spray.json._
   import JsonProtocol._
 
-  def toSingerRecord(line: String): TapS3JsonRecord =
-    TapS3JsonRecord(stream = "raw", time_extracted = None, record = line.parseJson)
+  def toSingerRecord(line: String, objectKey: Option[String] = None, version: Option[String] = None, lastModifiedAt: Option[String] = None): TapS3JsonRecord =
+    TapS3JsonRecord(time_extracted = None, record = line.parseJson, key = objectKey, version = version, last_modified_at = lastModifiedAt)
 
   def toJsonString(tapS3JsonRecord: TapS3JsonRecord): String = {
     if(ignoreHeaders) tapS3JsonRecord.record.compactPrint

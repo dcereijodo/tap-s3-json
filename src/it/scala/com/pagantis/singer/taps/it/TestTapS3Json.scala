@@ -15,6 +15,7 @@ import akka.util.ByteString
 import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
 import com.amazonaws.regions.AwsRegionProvider
 import com.pagantis.singer.taps.S3Source
+import com.pagantis.singer.taps.ObjectMetadata
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
@@ -180,7 +181,7 @@ class TestTapS3Json
               )
             )
             .log("test-invalid-credentials")
-            .runWith(TestSink.probe[String]).request(1).expectError()
+            .runWith(TestSink.probe[(String, ObjectMetadata)]).request(1).expectError()
         }
       }
 
@@ -189,7 +190,7 @@ class TestTapS3Json
           new S3Source(testBucketMustNotExist).object_contents
             .withAttributes(minioSettings)
             .log("test-inexistent-bucket-name")
-            .runWith(TestSink.probe[String]).request(1).expectError()
+            .runWith(TestSink.probe[(String, ObjectMetadata)]).request(1).expectError()
         }
       }
 
@@ -197,7 +198,7 @@ class TestTapS3Json
         within(50 seconds) {
           new S3Source(testBucketMustExist).object_contents
             .withAttributes(minioSettings)
-            .runWith(TestSink.probe[String]).request(1).expectNext()
+            .runWith(TestSink.probe[(String, ObjectMetadata)]).request(1).expectNext()
         }
       }
 
@@ -205,7 +206,7 @@ class TestTapS3Json
         within(50 seconds) {
           new S3Source(testBucketMustExist, Some("madeup-path")).object_contents
             .withAttributes(minioSettings)
-            .runWith(TestSink.probe[String]).request(1).expectComplete()
+            .runWith(TestSink.probe[(String, ObjectMetadata)]).request(1).expectComplete()
         }
       }
 
@@ -217,6 +218,9 @@ class TestTapS3Json
 
         val listingResult = completable.futureValue
         listingResult.size shouldBe 1
+        listingResult.map(content => (content._1, content._2.key)) shouldBe List(
+          ("""{"one" : "line"}""","short/single-liner")
+        )
       }
 
       "success to stream a multiline file from an S3 bucket" in {
@@ -226,7 +230,11 @@ class TestTapS3Json
             .runWith(Sink.seq)
 
         val listingResult = completable.futureValue
-        listingResult.size shouldBe 3
+        listingResult.map(content => (content._1, content._2.key)) shouldBe List(
+          ("""{"one": "line"}""","short/multi-liner"),
+          ("""{"two": "lines"}""","short/multi-liner"),
+          ("""{"three": "lines"}""","short/multi-liner")
+        )
       }
 
       "success to stream a mixed single-line / multiline bucket S3 bucket" in {
@@ -236,7 +244,12 @@ class TestTapS3Json
             .runWith(Sink.seq)
 
         val listingResult = completable.futureValue
-        listingResult.size shouldBe 4
+        listingResult.map(content => (content._1, content._2.key)).toSet shouldBe Set(
+          ("""{"one" : "line"}""","short/single-liner"),
+          ("""{"one": "line"}""","short/multi-liner"),
+          ("""{"two": "lines"}""","short/multi-liner"),
+          ("""{"three": "lines"}""","short/multi-liner")
+        )
       }
 
       "success to stream with a records limit" in {
@@ -259,7 +272,9 @@ class TestTapS3Json
           new S3Source(testBucketMustExist, Some("long/long-multi-liner")).object_contents
             .withAttributes(minioSettings)
             .runWith(Sink.seq)
-        completable.futureValue.size shouldBe 500
+        val longJson = """{"_id":"5cfa71aa7075d5f43884843a","index":0,"guid":"82a41960-5e85-4b03-ab21-29c64eed2190","isActive":true,"balance":"$2,058.50","picture":"http://placehold.it/32x32","age":39,"eyeColor":"blue","name":"Natalia Washington","gender":"female","company":"EXOSIS","email":"nataliawashington@exosis.com","phone":"+1 (813) 556-3785"}"""
+        completable.futureValue.map(content => (content._1, content._2.key)) shouldBe
+          ((longJson + "\n") * 500).split("\n").map((_,"long/long-multi-liner")).toList
       }
 
       "stream recursively folders and sub-folders" in {
@@ -302,7 +317,5 @@ class TestTapS3Json
             .runWith(Sink.seq)
         completable.futureValue.size shouldBe 1
       }
-
     }
-
 }

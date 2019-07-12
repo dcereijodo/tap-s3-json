@@ -27,7 +27,7 @@ object TapS3Json extends App {
   val tapComputation =
     S3Source.fromConfig.object_contents
     .log(clazz)
-    .mapAsync(12)( contentLine => Future{ singerAdapter.toSingerRecord(contentLine) })
+    .mapAsync(12)( s3Pair => Future{ singerAdapter.toSingerRecord(line = s3Pair._1, objectKey = Some(s3Pair._2.key), version = s3Pair._2.version, lastModifiedAt = Some(s3Pair._2.lastModifiedAt)) })
     .log(clazz)
     .async
     .mapAsync(12)(singerMessage => Future{ singerAdapter.toJsonString(singerMessage)})
