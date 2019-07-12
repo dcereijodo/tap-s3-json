@@ -22,8 +22,8 @@ jobs:
       - run:
           name: BATS Test
           command: |
-            unzip /tmp/workspace/bundle/tap-s3-json-LATEST.zip
             VERSION=$(cat /tmp/workspace/exchange/VERSION)
+            unzip /tmp/workspace/bundle/tap-s3-json-$VERSION.zip
             TAP_START_SCRIPT=tap-s3-json-$VERSION/bin/tap-s3-json bats bats/cli.bats
   it-tests:
     docker:
@@ -81,13 +81,25 @@ jobs:
             BUNDLE_VERSION=$(sbt version -J-Dsbt.log.noformat=true | tail -1 | cut -f 2 -d ' ')
             mkdir -p workspace/bundle
             mkdir -p workspace/exchange
-            cp target/universal/tap-s3-json-$BUNDLE_VERSION.zip workspace/bundle/tap-s3-json-LATEST.zip
+            cp target/universal/tap-s3-json-$BUNDLE_VERSION.zip workspace/bundle/tap-s3-json-$BUNDLE_VERSION.zip
             echo "$BUNDLE_VERSION" > workspace/exchange/VERSION
       - persist_to_workspace:
           root: workspace
           paths:
             - bundle
             - exchange
+  publish-github-release:
+    docker:
+      - image: circleci/golang:1.8
+    steps:
+      - attach_workspace:
+          at: /tmp/workspace
+      - run:
+          name: "Publish Release on GitHub"
+          command: |
+            go get github.com/tcnksm/ghr
+            VERSION=$(cat /tmp/workspace/exchange/VERSION)
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -delete ${VERSION} /tmp/workspace/bundle
 
 workflows:
   version: 2
@@ -100,3 +112,13 @@ workflows:
       - it-tests:
           requires:
             - build
+      - publish-github-release:
+          context: github_api
+          requires:
+            - cli-tests
+            - it-tests
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^\d+\.\d+\.\d+$/
