@@ -191,6 +191,7 @@ process_args () {
   addJava "-Dtap.ignore_headers=true"
   addJava '-Dtap.bucket_name=pmt-events-datalake-storage-prod'
   addJava '-Dtap.limit=20'
+  addJava '-Dtap.prefix='
   addJava '-Dtap.frame_length=262144'
 
   while [[ $# -gt 0 ]]; do

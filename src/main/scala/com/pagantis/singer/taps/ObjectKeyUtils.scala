@@ -1,20 +1,15 @@
 package com.pagantis.singer.taps
 
-import com.pagantis.singer.taps.exceptions.InvalidPrefixException
-
 trait ObjectKeyUtils {
 
   def buildS3Prefix(s3Prefix: Option[String], partitioningSubPath: Option[String]): Option[String] =
     s3Prefix match {
-      case Some(prefix) =>
-        if(prefix.length < 1) throw new InvalidPrefixException
-        else {
+      case Some(prefix) if prefix.length > 0 =>
           partitioningSubPath match {
             case Some(subPath) => Some(s"$prefix/$subPath")
             case None =>  Some(s"$prefix")
-          }
         }
-      case None => partitioningSubPath
+      case _ => partitioningSubPath
     }
 
   def buildPartitioningSubPath(partitioningKey: Option[String], partitioningValue: Option[String]): Option[String] =

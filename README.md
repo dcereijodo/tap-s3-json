@@ -87,15 +87,16 @@ tap-s3-json--X.Y.Z/bin/tap-s3-json help
 Installation of the packaged version as a command on a Mac system can be done with `brew`
 ```console
 $ brew tap dcereijodo/tap-s3-json && brew install tap-s3-json
-$ tap-s3-json version
-0.0.1
+# test it with some public json data
+$ tap-s3-json --tap.bucket_name ryft-public-sample-data --region us-east-1 --tap.prefix esRedditJson --tap.limit 1
+{"index":{"_index":"reddit","_type":"redditType","_id":198000}}
+{"subreddit":"AskReddit","author":"agk23","body":"Licking honey out of a shag carpet","stickied":false,"parent_id":"t1_cyhhyhi","distinguished":null,"score":2,"subreddit_id":"t5_2qh1i","id":"cyhxwdi","author_flair_css_class":null,"author_flair_text":null,"ups":2,"controversiality":0,"edited":false,"link_id":"t3_3yx5wi","retrieved_on":1454209966,"created_utc":1451614990,"gilded":0}
 ```
 
 The command uses some defaults
 * Logback `LOG_LEVEL` :arrow_right: `ERROR`
 * Tap `ignore_headers` :arrow_right: `true`
 * Tap `bucket_name` :arrow_right: `pmt-events-datalake-storage-prod`
-* Tap `prefix` :arrow_right: `PMT_ORDER/ORDER_CREATED`
 * Tap `limit` :arrow_right: `20`
 * Tap `frame_length` :arrow_right: `262144` (enough to support the maximum SNS message size)
 * Tap `worker_count` :arrow_right: `4`

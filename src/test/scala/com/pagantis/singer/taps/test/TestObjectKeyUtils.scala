@@ -9,16 +9,14 @@ class TestObjectKeyUtils extends ObjectKeyUtils with Matchers with WordSpecLike 
     "build with S3 prefix" in {
       buildS3Prefix(Some("s3/prefix"), Some("date=2019-01-01")) shouldBe Some("s3/prefix/date=2019-01-01")
     }
+    "build without S3 prefix but with partitioning" in {
+      buildS3Prefix(Some(""), Some("date=2019-01-01")) shouldBe Some("date=2019-01-01")
+    }
     "build with S3 object key" in {
       buildS3Prefix(Some("8f3ac260-2d50-4a84-8e9b-eae8a6b79b7d"), None) shouldBe Some("8f3ac260-2d50-4a84-8e9b-eae8a6b79b7d")
     }
     "build without partitioning value" in {
       buildS3Prefix(Some("s3/prefix"), None) shouldBe Some("s3/prefix")
-    }
-    "fail on invalid prefix" in {
-      an [InvalidPrefixException] should be thrownBy {
-        buildS3Prefix(Some(""), Some("date=2019-01-01"))
-      }
     }
     "match a key by regex" in {
       filterKey("group/action/date=2001", ".*date=2001") shouldBe true
