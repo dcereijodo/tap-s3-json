@@ -77,12 +77,21 @@ sbt run
 
 ## CLI
 The `universal:packageBin` sbt target from the previous section will generate zip file in `target/universal` with a packaged version of the tap. This wrapps the call to the tap with a set of defaults and options aliases so a friendly interface can be exposed to the user in the form of a CLI util.
+
 For running the packaged tap (Java 8 required)
 ```bash
-unzip target/universal/tap-s3-json-0.1-SNAPSHOT.zip
-tap-s3-json-0.1-SNAPSHOT/bin/tap-s3-json help
+unzip target/universal/tap-s3-json-X.Y.Z.zip
+tap-s3-json--X.Y.Z/bin/tap-s3-json help
 ```
-The command uses defaults
+
+Installation of the packaged version as a command on a Mac system can be done with `brew`
+```console
+$ brew tap dcereijodo/tap-s3-json && brew install tap-s3-json
+$ tap-s3-json version
+0.0.1
+```
+
+The command uses some defaults
 * Logback `LOG_LEVEL` :arrow_right: `ERROR`
 * Tap `ignore_headers` :arrow_right: `true`
 * Tap `bucket_name` :arrow_right: `pmt-events-datalake-storage-prod`
