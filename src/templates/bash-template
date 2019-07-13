@@ -190,7 +190,6 @@ process_args () {
   # Defaults
   addJava "-Dtap.ignore_headers=true"
   addJava '-Dtap.bucket_name=pmt-events-datalake-storage-prod'
-  addJava '-Dtap.prefix=PMT_ORDER/ORDER_CREATED'
   addJava '-Dtap.limit=20'
   addJava '-Dtap.frame_length=262144'
 
