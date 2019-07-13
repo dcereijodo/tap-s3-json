@@ -12,7 +12,7 @@ lazy val root = (project in file(".")).
     name := "tap-s3-json",
     Defaults.itSettings
   )
-  
+
 trapExit := false
 
 libraryDependencies ++= Seq(
@@ -35,6 +35,8 @@ releaseProcess := Seq[ReleaseStep](
   runClean,                               // : ReleaseStep
   runTest,                                // : ReleaseStep
   setReleaseVersion,                      // : ReleaseStep
+  commitReleaseVersion,                   // : ReleaseStep, performs the initial git checks
   tagRelease,                             // : ReleaseStep
-  setNextVersion                          // : ReleaseStep
+  setNextVersion,                         // : ReleaseStep
+  commitNextVersion                       // : ReleaseStep
 )
