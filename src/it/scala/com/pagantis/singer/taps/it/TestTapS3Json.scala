@@ -328,14 +328,11 @@ class TestTapS3Json
 
       "stream no JSON data" in {
         val completable =
-          new S3Source(
-            testBucketMustExist,
-            s3Prefix = Some("partitioned"),
-            partitioningSubPath = Some("date=2019-02-01"),
-            filteredWith = Some(".*line4.json")
-          ).object_contents
+          new S3Source(testBucketMustExist, s3Prefix = Some("notJson"))
+            .object_contents
             .withAttributes(minioSettings)
             .runWith(Sink.seq)
+
         completable.futureValue.size shouldBe 1
       }
     }

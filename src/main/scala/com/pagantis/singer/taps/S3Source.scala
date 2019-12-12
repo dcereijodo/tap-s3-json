@@ -35,9 +35,9 @@ object S3Source extends ObjectKeyUtils {
 /**
   * A `S3Source` implements the construction of Akka streams of S3 object keys and contents
   * @param bucketName The name of the bucket to stream from
-  * @param s3Prefix The prefix of the S3 objects to be streamed. If it's [[None]] the whole bucket is streamed.
+  * @param s3Prefix The prefix of the S3 objects to be streamed. If it's [[scala.None]] the whole bucket is streamed.
   * @param partitioningSubPath The partitioning sub-path to be used if any.
-  * @param limit The number of elements to be streamed. If it's [[None]] or 0 no limit is applied.
+  * @param limit The number of elements to be streamed. If it's [[scala.None]] or 0 no limit is applied.
   * @param filteredWith A regular expression to further filter S3 object keys. Is an expression is provided, only
   *                     matching keys are streamed.
   * @param maximumFrameLength The maximum size of the buffer used for [[akka.stream.scaladsl.Framing]] object contents.
@@ -56,7 +56,7 @@ extends ObjectKeyUtils
 {
 
   /**
-    * Returns a [[Source]] of object keys for the provided settings.
+    * Returns a [[akka.stream.scaladsl.Source]] of object keys for the provided settings.
     */
   def object_keys: Source[String, NotUsed] =
     filteredWith match {
@@ -69,7 +69,7 @@ extends ObjectKeyUtils
     }
 
   /**
-    * Returns a [[Source]] of tuples (object metadata, object contents) for the provided settings.
+    * Returns a [[akka.stream.scaladsl.Source]] of tuples (object metadata, object contents) for the provided settings.
     * The object contents are provided as text, and the object metadata are wrapped in a [[ObjectMetadata]] class.
     */
   def object_contents: Source[(String, ObjectMetadata), NotUsed] = {
