@@ -70,7 +70,6 @@ class TestSingerModel extends WordSpecLike with Matchers {
         """.stripMargin
 
       singerAdapter.toSingerRecord(inputJson) shouldBe TapS3JsonRecord(
-        stream = "raw",
         time_extracted = None,
         record = inputJson.parseJson
       )
