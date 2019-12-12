@@ -107,7 +107,7 @@ class TestTapS3Json
         }
       // fill buckets with test data
       def uploadString(body: String, key: String) = {
-        Source.single(ByteString(body))
+        Source.single(ByteString(body.trim))
           .runWith(
             S3.multipartUpload(testBucketMustExist, key)
               .withAttributes(s3Settings)
@@ -152,6 +152,13 @@ class TestTapS3Json
           }
         )
 
+      val putNotJson = testBucketCreated flatMap( _ => {
+        for {
+          _ <- uploadString("09239323945", "notJson/line.json")
+        } yield Done
+      }
+        )
+
       val fixtureReady = for {
         _ <- testBucketCreated
         _ <- testBucketDestroyed
@@ -159,6 +166,7 @@ class TestTapS3Json
         _ <- putMultiLineBody
         _ <- putNestedKeys
         _ <- putPartitioned
+        _ <- putNotJson
       } yield Done
 
       Await.ready(fixtureReady, Duration.Inf)
@@ -315,6 +323,16 @@ class TestTapS3Json
           ).object_contents
             .withAttributes(minioSettings)
             .runWith(Sink.seq)
+        completable.futureValue.size shouldBe 1
+      }
+
+      "stream no JSON data" in {
+        val completable =
+          new S3Source(testBucketMustExist, s3Prefix = Some("notJson"))
+            .object_contents
+            .withAttributes(minioSettings)
+            .runWith(Sink.seq)
+
         completable.futureValue.size shouldBe 1
       }
     }

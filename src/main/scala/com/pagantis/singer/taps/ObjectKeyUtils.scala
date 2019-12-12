@@ -15,7 +15,7 @@ trait ObjectKeyUtils {
   def buildPartitioningSubPath(partitioningKey: Option[String], partitioningValue: Option[String]): Option[String] =
     partitioningValue.flatMap(partVal => partitioningKey.map(partKey => s"$partKey=$partVal"))
 
-  def filterKey(key: String, expression: String) = {
+  def filterKey(key: String, expression: String): Boolean = {
     val keyPattern = expression.r
     key match {
       case keyPattern(_*) => true
